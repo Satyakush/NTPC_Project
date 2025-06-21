@@ -1,15 +1,21 @@
+// src/components/Admin/ApproveUsers.jsx
 import { useState, useEffect } from "react";
-import API from "../../services/api.jsx";
+import API from "../../services/api"; // Adjust the path as necessary
 
 export default function ApproveUsers() {
   const [users, setUsers] = useState([]);
+
   useEffect(() => {
-    API.get("/auth/pending").then((r) => setUsers(r.data));
+    const fetchPendingUsers = async () => {
+      const response = await API.get("/auth/pending"); // Fetch pending users
+      setUsers(response.data);
+    };
+    fetchPendingUsers();
   }, []);
 
   const approve = async (id) => {
-    await API.post("/auth/approve", { userId: id });
-    setUsers(users.filter((u) => u._id !== id));
+    await API.post("/auth/approve", { userId: id }); // Approve user
+    setUsers(users.filter((u) => u._id !== id)); // Remove approved user from list
   };
 
   return (

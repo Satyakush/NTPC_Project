@@ -1,11 +1,13 @@
 import { useState, useEffect } from "react";
-import API from "../../services/api.jsx";
+import API from "../../services/api";
 
-export default function CustomerMyBills() {
+export default function MyBills() {
   const [bills, setBills] = useState([]);
+
   useEffect(() => {
     API.get("/bills/mine").then((r) => setBills(r.data));
   }, []);
+
   return (
     <div className="p-4">
       <h2>My Bills</h2>

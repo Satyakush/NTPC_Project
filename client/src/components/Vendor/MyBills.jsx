@@ -1,20 +1,38 @@
 import { useState, useEffect } from "react";
-import API from "../../services/api.jsx";
+import API from "../../services/api";
 
-export default function VendorMyBills() {
+export default function MyBills() {
   const [bills, setBills] = useState([]);
+
   useEffect(() => {
-    API.get("/bills/mine").then((r) => setBills(r.data));
+    const fetchMyBills = async () => {
+      try {
+        const response = await API.get("/bills/mine");
+        setBills(response.data);
+      } catch (error) {
+        console.error("Error fetching my bills:", error);
+        alert("Failed to fetch your bills. Please try again later.");
+      }
+    };
+
+    fetchMyBills();
   }, []);
+
   return (
     <div className="p-4">
       <h2>My Bills</h2>
-      {bills.map((b) => (
-        <div key={b._id} className="p-4 bg-green-100 rounded shadow mb-2">
-          <div>Request: {b.requestId.requestId}</div>
-          <div>Amount: ₹{b.amount}</div>
-        </div>
-      ))}
+      {bills.length === 0 ? (
+        <p>No bills available.</p>
+      ) : (
+        bills.map((bill) => (
+          <div key={bill._id} className="p-3 bg-green-100 rounded shadow mb-2">
+            <div>Request ID: {bill.requestId.requestId}</div>
+            <div>Amount: ₹{bill.amount}</div>
+            <div>Commission: ₹{bill.commission}</div>
+            <div>Total Amount: ₹{bill.totalAmount}</div>
+          </div>
+        ))
+      )}
     </div>
   );
 }

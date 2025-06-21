@@ -1,24 +1,25 @@
+// src/App.jsx
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "./services/auth";
 import Navbar from "./components/Navbar";
 import PrivateRoute from "./components/PrivateRoute";
 
-// auth
+// Auth components
 import Login from "./components/Auth/Login";
 import Register from "./components/Auth/Register";
 
-// customer
+// Customer components
 import MyRequests from "./components/Customer/MyRequests";
 import CreateRequest from "./components/Customer/CreateRequest";
 import CustomerMyBills from "./components/Customer/MyBills";
 
-// vendor
+// Vendor components
 import PublishedRequests from "./components/Vendor/PublishedRequests";
 import SubmitQuote from "./components/Vendor/SubmitQuote";
 import MyQuotes from "./components/Vendor/MyQuotes";
-import VendorMyBills from "./components/Vendor/MyBills";
+import MyBills from "./components/Vendor/MyBills";
 
-// admin
+// Admin components
 import ApproveUsers from "./components/Admin/ApproveUsers";
 import PublishRequests from "./components/Admin/PublishRequests";
 import ViewQuotes from "./components/Admin/ViewQuotes";
@@ -53,7 +54,7 @@ function App() {
                 element={<SubmitQuote />}
               />
               <Route path="/vendor/quotes" element={<MyQuotes />} />
-              <Route path="/vendor/bills" element={<VendorMyBills />} />
+              <Route path="/vendor/bills" element={<MyBills />} />
             </Route>
 
             {/* Admin (Cooperative) Protected Routes */}

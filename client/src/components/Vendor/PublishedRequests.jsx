@@ -1,12 +1,14 @@
 import { useState, useEffect } from "react";
+import API from "../../services/api";
 import { Link } from "react-router-dom";
-import API from "../../services/api.jsx";
 
 export default function PublishedRequests() {
   const [reqs, setReqs] = useState([]);
+
   useEffect(() => {
     API.get("/requests?search=").then((r) => setReqs(r.data));
   }, []);
+
   return (
     <div className="p-4">
       <h2>Available Requests</h2>

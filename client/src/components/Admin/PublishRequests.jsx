@@ -1,13 +1,14 @@
 import { useState, useEffect } from "react";
-import API from "../../services/api.jsx";
+import API from "../../services/api";
 
 export default function PublishRequests() {
   const [reqs, setReqs] = useState([]);
+
   useEffect(() => {
     API.get("/requests").then((r) => setReqs(r.data));
   }, []);
 
-  const pub = async (reqId) => {
+  const publish = async (reqId) => {
     await API.post("/requests/publish", { requestId: reqId });
     setReqs(
       reqs.map((r) => (r.requestId === reqId ? { ...r, isPublished: true } : r))
@@ -26,7 +27,7 @@ export default function PublishRequests() {
             {r.requestId} ({r.isPublished ? "Published" : "Draft"})
           </span>
           {!r.isPublished && (
-            <button onClick={() => pub(r.requestId)}>Publish</button>
+            <button onClick={() => publish(r.requestId)}>Publish</button>
           )}
         </div>
       ))}

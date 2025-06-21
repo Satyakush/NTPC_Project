@@ -1,11 +1,13 @@
 import { useState, useEffect } from "react";
-import API from "../../services/api.jsx";
+import API from "../../services/api";
 
 export default function MyQuotes() {
   const [quotes, setQuotes] = useState([]);
+
   useEffect(() => {
     API.get("/quotes/mine").then((r) => setQuotes(r.data));
   }, []);
+
   return (
     <div className="p-4">
       <h2>My Quotes</h2>

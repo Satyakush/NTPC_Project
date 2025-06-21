@@ -1,46 +1,101 @@
-import { useState } from "react";
-import API from "../../services/api.jsx";
+import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import API from "../../services/api";
 
 export default function Register() {
-  const [f, s] = useState({
+  const [formData, setFormData] = useState({
     name: "",
     email: "",
+    phone: "",
+    organization: "",
+    address: "",
+    gstNumber: "",
     password: "",
-    role: "customer",
+    role: "customer", // Default role
   });
-  const sub = async (e) => {
-    e.preventDefault();
-    await API.post("/auth/register", f);
-    alert("Registered — wait for approval.");
+
+  const navigate = useNavigate();
+
+  const handleChange = (e) => {
+    setFormData((prev) => ({
+      ...prev,
+      [e.target.name]: e.target.value,
+    }));
   };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      await API.post("/auth/register", formData);
+      alert("Registered successfully! Wait for approval.");
+      navigate("/login");
+    } catch (error) {
+      console.error(error);
+      alert(error.response?.data?.message || "Registration failed");
+    }
+  };
+
   return (
-    <form onSubmit={sub} className="max-w-md mx-auto p-4 bg-white shadow mt-8">
-      <h2>Register</h2>
-      <select
-        name="role"
-        value={f.role}
-        onChange={(e) => s({ ...f, role: e.target.value })}
-      >
-        <option value="customer">Customer</option>
-        <option value="vendor">Vendor</option>
-      </select>
+    <form onSubmit={handleSubmit} className="p-4 space-y-4 max-w-md mx-auto">
       <input
         name="name"
         placeholder="Name"
-        onChange={(e) => s({ ...f, name: e.target.value })}
+        onChange={handleChange}
+        required
+        className="w-full p-2 border"
       />
       <input
         name="email"
         placeholder="Email"
-        onChange={(e) => s({ ...f, email: e.target.value })}
+        onChange={handleChange}
+        required
+        className="w-full p-2 border"
       />
       <input
-        name="password"
-        type="password"
-        placeholder="Password"
-        onChange={(e) => s({ ...f, password: e.target.value })}
+        name="phone"
+        placeholder="Phone"
+        onChange={handleChange}
+        required
+        className="w-full p-2 border"
       />
-      <button type="submit">Register</button>
+      <input
+        name="organization"
+        placeholder="Organization"
+        onChange={handleChange}
+        className="w-full p-2 border"
+      />
+      <input
+        name="address"
+        placeholder="Address"
+        onChange={handleChange}
+        className="w-full p-2 border"
+      />
+      <input
+        name="gstNumber"
+        placeholder="GST Number"
+        onChange={handleChange}
+        className="w-full p-2 border"
+      />
+      <input
+        type="password"
+        name="password"
+        placeholder="Password"
+        onChange={handleChange}
+        required
+        className="w-full p-2 border"
+      />
+      <select
+        name="role"
+        value={formData.role}
+        onChange={handleChange}
+        className="w-full p-2 border"
+      >
+        <option value="customer">Customer</option>
+        <option value="vendor">Vendor</option>
+      </select>
+      <button type="submit" className="bg-blue-500 text-white p-2 w-full">
+        Register
+      </button>
     </form>
   );
 }

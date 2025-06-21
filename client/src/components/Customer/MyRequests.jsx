@@ -1,11 +1,13 @@
 import { useState, useEffect } from "react";
-import API from "../../services/api.jsx";
+import API from "../../services/api";
 
 export default function MyRequests() {
   const [data, setData] = useState([]);
+
   useEffect(() => {
     API.get("/requests/mine").then((r) => setData(r.data));
   }, []);
+
   return (
     <div className="p-4">
       <h2>My Requests</h2>
