@@ -1,12 +1,11 @@
 const express = require("express");
 const router = express.Router();
-const billController = require("../controllers/billController");
-const authMiddleware = require("../middleware/authMiddleware");
+const { getMyBills, getAllBills } = require("../controllers/billController");
 
-// Upload a bill
-router.post("/", authMiddleware, billController.uploadBill);
+const auth = require("../middleware/authMiddleware");
+const role = require("../middleware/roleMiddleware");
 
-// Get bill by request ID
-router.get("/:requestId", authMiddleware, billController.getBillByRequest);
+router.get("/mine", auth, getMyBills);
+router.get("/", auth, role("cooperative"), getAllBills);
 
 module.exports = router;

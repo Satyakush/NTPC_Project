@@ -1,78 +1,116 @@
-const jwt = require("jsonwebtoken");
+const User = require("../models/User");
 const bcrypt = require("bcryptjs");
-const Customer = require("../models/Customer");
-const Vendor = require("../models/Vendor");
-const Cooperative = require("../models/Cooperative");
+const jwt = require("jsonwebtoken");
+const transporter = require("../config/mailer");
 
-const generateToken = (id, role) => {
-  return jwt.sign({ id, role }, process.env.JWT_SECRET, { expiresIn: "7d" });
+// Helper to determine role from user info
+const determineRole = (user) => {
+  if (user.email === process.env.COOP_EMAIL) return "cooperative";
+  return user.isVendor ? "vendor" : "customer";
 };
 
+// REGISTER NEW USER
 exports.register = async (req, res) => {
   try {
-    const { name, email, password, role } = req.body;
+    const {
+      name,
+      email,
+      phone,
+      organization,
+      address,
+      gstNumber,
+      password,
+      isVendor,
+    } = req.body;
 
-    if (!name || !email || !password || !role) {
-      return res.status(400).json({ error: "All fields are required" });
-    }
+    const existingUser = await User.findOne({ email });
+    if (existingUser)
+      return res.status(400).json({ message: "Email already registered" });
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    let userModel;
-    if (role === "customer") userModel = Customer;
-    else if (role === "vendor") userModel = Vendor;
-    else if (role === "cooperative") userModel = Cooperative;
-    else return res.status(400).json({ error: "Invalid role" });
-
-    const existing = await userModel.findOne({ email });
-    if (existing)
-      return res.status(400).json({ error: "Email already exists" });
-
-    const user = await userModel.create({
+    const newUser = new User({
       name,
       email,
-      password_hash: hashedPassword,
-      email_verified: true, // can set to false if you implement email verification
+      phone,
+      organization,
+      address,
+      gstNumber,
+      password: hashedPassword,
+      isVendor,
+      isApproved: false, // wait for admin approval
     });
 
-    const token = generateToken(user._id, role);
-    res.status(201).json({
-      token,
-      user: { name: user.name, email: user.email, role },
+    await newUser.save();
+
+    // Send email to user
+    await transporter.sendMail({
+      from: process.env.COOP_EMAIL,
+      to: email,
+      subject: "Registration Submitted",
+      text: "Your account is pending approval by the cooperative.",
     });
-  } catch (err) {
-    console.error("Register Error:", err);
-    res.status(500).json({ error: "Server error" });
+
+    res.status(201).json({
+      message: "User registered successfully. Pending approval.",
+    });
+  } catch (error) {
+    console.error("Registration error:", error.message);
+    res.status(500).json({ message: "Server error during registration" });
   }
 };
 
+// LOGIN EXISTING USER
 exports.login = async (req, res) => {
   try {
-    const { email, password, role } = req.body;
+    const { email, password } = req.body;
+    const user = await User.findOne({ email });
+    if (!user)
+      return res
+        .status(404)
+        .json({ message: "User not found with that email" });
 
-    if (!email || !password || !role) {
-      return res.status(400).json({ error: "All fields are required" });
-    }
+    const passwordMatch = await bcrypt.compare(password, user.password);
+    if (!passwordMatch)
+      return res.status(401).json({ message: "Invalid password" });
 
-    let userModel;
-    if (role === "customer") userModel = Customer;
-    else if (role === "vendor") userModel = Vendor;
-    else if (role === "cooperative") userModel = Cooperative;
-    else return res.status(400).json({ error: "Invalid role" });
+    if (!user.isApproved)
+      return res.status(403).json({ message: "Account not approved yet" });
 
-    const user = await userModel.findOne({ email });
-    if (!user) return res.status(401).json({ error: "Invalid credentials" });
+    const role = determineRole(user);
 
-    const isMatch = await bcrypt.compare(password, user.password_hash);
-    if (!isMatch) return res.status(401).json({ error: "Invalid credentials" });
-
-    const token = generateToken(user._id, role);
-    res.status(200).json({
-      token,
-      user: { name: user.name, email: user.email, role },
+    const token = jwt.sign({ id: user._id, role }, process.env.JWT_SECRET, {
+      expiresIn: "1h",
     });
-  } catch (err) {
-    console.error("Register Error:", err); // ✅ log the real issue
-    res.status(500).json({ error: "Server error" });
+
+    res.status(200).json({ token, user });
+  } catch (error) {
+    console.error("Login error:", error.message);
+    res.status(500).json({ message: "Server error during login" });
+  }
+};
+
+// APPROVE USER BY COOPERATIVE
+exports.approveUser = async (req, res) => {
+  try {
+    const { userId } = req.body;
+    const user = await User.findById(userId);
+    if (!user)
+      return res.status(404).json({ message: "User not found for approval" });
+
+    user.isApproved = true;
+    await user.save();
+
+    await transporter.sendMail({
+      from: process.env.COOP_EMAIL,
+      to: user.email,
+      subject: "Account Approved",
+      text: "Your registration has been approved. You can now log in.",
+    });
+
+    res.json({ message: "User approved successfully" });
+  } catch (error) {
+    console.error("Approval error:", error.message);
+    res.status(500).json({ message: "Server error during user approval" });
   }
 };

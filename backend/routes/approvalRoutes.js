@@ -1,16 +1,10 @@
 const express = require("express");
 const router = express.Router();
-const approvalController = require("../controllers/approvalController");
-const authMiddleware = require("../middleware/authMiddleware");
+const { approveQuote } = require("../controllers/approvalController");
 
-// Approve a request
-router.post("/", authMiddleware, approvalController.approve);
+const auth = require("../middleware/authMiddleware");
+const role = require("../middleware/roleMiddleware");
 
-// Get approval status by request ID
-router.get(
-  "/:request_id",
-  authMiddleware,
-  approvalController.getApprovalStatus
-);
+router.post("/", auth, role("cooperative"), approveQuote);
 
 module.exports = router;

@@ -1,22 +1,16 @@
 const express = require("express");
 const router = express.Router();
-const quoteController = require("../controllers/quoteController");
-const authMiddleware = require("../middleware/authMiddleware");
+const {
+  submitQuote,
+  getMyQuotes,
+  getQuotesByRequest,
+} = require("../controllers/quoteController");
 
-// Submit a quote
-router.post("/", authMiddleware, quoteController.submitQuote);
+const auth = require("../middleware/authMiddleware");
+const role = require("../middleware/roleMiddleware");
 
-// Vendor's submitted quotes
-router.get("/vendor", authMiddleware, quoteController.getVendorQuotes);
-
-// All quotes for a request
-router.get(
-  "/request/:request_id",
-  authMiddleware,
-  quoteController.getRequestQuotes
-);
-
-// Get L1 quote for a request
-router.get("/l1/:request_id", authMiddleware, quoteController.getL1Quote);
+router.post("/", auth, role("vendor"), submitQuote);
+router.get("/mine", auth, role("vendor"), getMyQuotes);
+router.get("/:requestId", auth, role("cooperative"), getQuotesByRequest);
 
 module.exports = router;

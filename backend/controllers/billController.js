@@ -1,19 +1,17 @@
 const Bill = require("../models/Bill");
 
-exports.uploadBill = async (req, res) => {
-  try {
-    const bill = await Bill.create(req.body);
-    res.status(201).json(bill);
-  } catch (err) {
-    res.status(400).json({ error: err.message });
-  }
+exports.getMyBills = async (req, res) => {
+  const bills = await Bill.find({
+    $or: [{ customerId: req.user._id }, { vendorId: req.user._id }],
+  }).populate("requestId");
+  res.json(bills);
 };
 
-exports.getBillByRequest = async (req, res) => {
-  try {
-    const bill = await Bill.findOne({ request_id: req.params.requestId });
-    res.json(bill);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
+exports.getAllBills = async (req, res) => {
+  const { search } = req.query;
+  const filter = search ? { requestId: { $regex: search, $options: "i" } } : {};
+  const bills = await Bill.find(filter)
+    .populate("customerId", "name email")
+    .populate("vendorId", "name email");
+  res.json(bills);
 };
