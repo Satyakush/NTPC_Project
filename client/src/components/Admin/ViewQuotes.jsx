@@ -1,22 +1,28 @@
-import { useState, useEffect } from "react";
-import API from "../../services/api";
+// src/components/Admin/ViewQuotes.jsx
+import React, { useEffect, useState } from "react";
 
 export default function ViewQuotes() {
   const [quotes, setQuotes] = useState([]);
 
   useEffect(() => {
-    API.get("/quotes").then((r) => setQuotes(r.data));
+    fetch("/api/admin/quotes")
+      .then((res) => res.json())
+      .then(setQuotes);
   }, []);
 
   return (
-    <div className="p-4">
-      <h2>View Quotes</h2>
-      {quotes.map((q) => (
-        <div key={q._id} className="p-3 bg-gray-100 rounded shadow mb-2">
-          <div>Vendor: {q.vendorId.name}</div>
-          <div>Amount: ₹{q.amount}</div>
-        </div>
-      ))}
+    <div className="p-6">
+      <h2 className="text-2xl font-bold text-blue-700 mb-4">All Submitted Quotes</h2>
+      <div className="grid gap-4">
+        {quotes.map((quote, i) => (
+          <div key={i} className="bg-white p-4 shadow rounded border">
+            <p><strong>Vendor:</strong> {quote.vendor}</p>
+            <p><strong>Item:</strong> {quote.item}</p>
+            <p><strong>Quote:</strong> ₹{quote.amount}</p>
+            <p><strong>Status:</strong> <span className="font-medium text-blue-700">{quote.status}</span></p>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }

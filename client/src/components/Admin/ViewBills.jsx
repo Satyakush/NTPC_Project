@@ -1,38 +1,39 @@
-import { useState, useEffect } from "react";
-import API from "../../services/api";
+
+// src/components/Admin/ViewBills.jsx
+import React, { useEffect, useState } from "react";
 
 export default function ViewBills() {
   const [bills, setBills] = useState([]);
 
   useEffect(() => {
-    const fetchBills = async () => {
-      try {
-        const response = await API.get("/bills");
-        setBills(response.data);
-      } catch (error) {
-        console.error("Error fetching bills:", error);
-        alert("Failed to fetch bills. Please try again later.");
-      }
-    };
-
-    fetchBills();
+    fetch("/api/admin/bills")
+      .then((res) => res.json())
+      .then(setBills);
   }, []);
 
   return (
-    <div className="p-4">
-      <h2>All Bills</h2>
-      {bills.length === 0 ? (
-        <p>No bills available.</p>
-      ) : (
-        bills.map((bill) => (
-          <div key={bill._id} className="p-3 bg-green-50 rounded shadow mb-2">
-            <div>Request ID: {bill.requestId.requestId}</div>
-            <div>Customer: {bill.customerId.name}</div>
-            <div>Vendor: {bill.vendorId.name}</div>
-            <div>Total: ₹{bill.totalAmount}</div>
-          </div>
-        ))
-      )}
+    <div className="p-6">
+      <h2 className="text-2xl font-bold text-blue-700 mb-4">All Bills</h2>
+      <table className="w-full bg-white shadow rounded">
+        <thead className="bg-blue-100">
+          <tr>
+            <th className="px-4 py-2 text-left">Item</th>
+            <th className="px-4 py-2 text-left">Vendor</th>
+            <th className="px-4 py-2 text-left">Amount</th>
+            <th className="px-4 py-2 text-left">Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          {bills.map((bill, i) => (
+            <tr key={i} className="border-t">
+              <td className="px-4 py-2">{bill.item}</td>
+              <td className="px-4 py-2">{bill.vendor}</td>
+              <td className="px-4 py-2">₹{bill.amount}</td>
+              <td className="px-4 py-2">{bill.status}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
     </div>
   );
 }

@@ -1,22 +1,28 @@
-import { useState, useEffect } from "react";
-import API from "../../services/api";
+// src/components/Customer/MyRequests.jsx
+import React, { useEffect, useState } from "react";
 
 export default function MyRequests() {
-  const [data, setData] = useState([]);
+  const [requests, setRequests] = useState([]);
 
   useEffect(() => {
-    API.get("/requests/mine").then((r) => setData(r.data));
+    fetch("/api/customer/requests")
+      .then((res) => res.json())
+      .then(setRequests);
   }, []);
 
   return (
-    <div className="p-4">
-      <h2>My Requests</h2>
-      {data.map((r) => (
-        <div key={r._id} className="p-4 bg-gray-50 rounded shadow mb-2">
-          <div>ID: {r.requestId}</div>
-          <div>Status: {r.isPublished ? "Published" : "Draft"}</div>
-        </div>
-      ))}
+    <div className="p-6">
+      <h2 className="text-2xl font-bold text-blue-700 mb-4">My Requests</h2>
+      <div className="grid gap-4">
+        {requests.map((req, i) => (
+          <div key={i} className="bg-white rounded-lg shadow-md p-4 border border-blue-100">
+            <h3 className="text-lg font-semibold">{req.item}</h3>
+            <p className="text-sm text-gray-600">Quantity: {req.quantity}</p>
+            <p className="text-sm text-gray-600">Description: {req.description}</p>
+            <p className="text-sm text-gray-600">Status: <span className="font-medium text-blue-800">{req.status}</span></p>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
