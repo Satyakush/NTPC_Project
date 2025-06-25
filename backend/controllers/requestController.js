@@ -1,90 +1,133 @@
-const Request = require("../models/Request");
 const User = require("../models/User");
+const Request = require("../models/Request");
+const generateRequestId = require("../utils/generateRequestId");
 const transporter = require("../config/mailer");
+const VendorItem = require("../models/VendorItem");
 
 exports.createRequest = async (req, res) => {
-  const { items } = req.body;
-  const customerId = req.user._id;
-  const email = req.user.email;
-
   try {
-    const count = await Request.countDocuments();
-    const date = new Date();
-    const reqId = `${String(date.getMonth() + 1).padStart(2, "0")}${String(
-      date.getDate()
-    ).padStart(2, "0")}${String(count + 1).padStart(3, "0")}${Math.floor(
-      Math.random() * 90 + 10
-    )}`;
+    const { items, remarks, isDraft } = req.body;
+    const customerId = req.user.id;
 
-    const request = new Request({ customerId, items, requestId: reqId });
-    await request.save();
+    const reqCount = await Request.countDocuments();
+    const requestId = generateRequestId(reqCount + 1);
 
-    await transporter.sendMail({
-      from: process.env.COOP_EMAIL,
-      to: email,
-      subject: "Request Created",
-      text: `Your request with ID ${reqId} was created.`,
+    const newRequest = await Request.create({
+      requestId,
+      customer: customerId,
+      items,
+      remarks,
+      status: isDraft ? "draft" : "pending", // 'pending' means waiting for cooperative review
     });
 
-    res.status(201).json(request);
-  } catch (error) {
-    console.error("Error creating request:", error);
-    res.status(500).json({ message: "Server error while creating request" });
-  }
-};
-
-exports.publishRequest = async (req, res) => {
-  const { requestId } = req.body;
-  try {
-    const request = await Request.findOne({ requestId });
-    if (!request) return res.status(404).json({ message: "Request not found" });
-
-    request.isPublished = true;
-    await request.save();
-
-    const vendors = await User.find({
-      role: "vendor",
-      isApproved: true,
-    }).select("email");
-    vendors.forEach((vendor) => {
-      transporter.sendMail({
-        from: process.env.COOP_EMAIL,
-        to: vendor.email,
-        subject: "New Request Published",
-        text: `New request ${requestId} is published.`,
+    // Notify cooperative only if not draft
+    if (!isDraft) {
+      await transporter.sendMail({
+        to: process.env.COOP_EMAIL,
+        subject: "📢 New Request Pending Review",
+        html: `<p>Request ID: ${requestId}</p><p>Customer: ${req.user.email}</p>`,
       });
-    });
+    }
 
-    res.json({ message: "Request published." });
-  } catch (error) {
-    console.error("Error publishing request:", error);
-    res.status(500).json({ message: "Server error while publishing request" });
+    res.status(201).json(newRequest);
+  } catch (err) {
+    console.error("❌ Error creating request:", err);
+    res.status(500).json({ message: "Error creating request" });
   }
 };
 
 exports.getMyRequests = async (req, res) => {
   try {
-    const requests = await Request.find({ customerId: req.user._id });
+    const requests = await Request.find({ customer: req.user.id }).sort({
+      createdAt: -1,
+    });
     res.json(requests);
-  } catch (error) {
-    console.error("Error fetching my requests:", error);
-    res.status(500).json({ message: "Server error while fetching requests" });
+  } catch (err) {
+    console.error("❌ Error fetching requests:", err);
+    res.status(500).json({ message: "Error fetching requests" });
+  }
+};
+
+exports.getVendorItems = async (req, res) => {
+  try {
+    const items = await VendorItem.find().distinct("name");
+    res.json(items);
+  } catch (err) {
+    console.error("❌ Error fetching vendor items:", err);
+    res.status(500).json({ message: "Failed to load vendor items" });
   }
 };
 
 exports.getAllRequests = async (req, res) => {
-  const { search } = req.query;
-  const filter = search ? { requestId: { $regex: search, $options: "i" } } : {};
   try {
-    const requests = await Request.find(filter).populate(
-      "customerId",
-      "name email"
+    const requests = await Request.find()
+      .populate("customer")
+      .sort({ createdAt: -1 });
+    res.json(requests);
+  } catch (err) {
+    console.error("❌ Error fetching all requests:", err);
+    res.status(500).json({ message: "Error fetching all requests" });
+  }
+};
+
+exports.getPublishedRequests = async (req, res) => {
+  try {
+    const requests = await Request.find({ status: "published" }).populate(
+      "customer"
     );
     res.json(requests);
-  } catch (error) {
-    console.error("Error fetching all requests:", error);
-    res
-      .status(500)
-      .json({ message: "Server error while fetching all requests" });
+  } catch (err) {
+    console.error("❌ Error fetching published requests:", err);
+    res.status(500).json({ message: "Error fetching published requests" });
+  }
+};
+
+exports.publishRequest = async (req, res) => {
+  try {
+    if (req.user.role !== "cooperative") {
+      return res
+        .status(403)
+        .json({ message: "Only cooperative can publish requests" });
+    }
+
+    const request = await Request.findByIdAndUpdate(
+      req.params.id,
+      { status: "published" },
+      { new: true }
+    ).populate("customer");
+
+    if (!request) return res.status(404).json({ message: "Request not found" });
+
+    const vendors = await User.find({ role: "vendor" });
+
+    for (let vendor of vendors) {
+      await transporter.sendMail({
+        to: vendor.email,
+        subject: "📢 New Request Available",
+        html: `<p>Hello Vendor,</p>
+               <p>A new request (<strong>${request.requestId}</strong>) has been published.</p>
+               <p>Customer: ${request.customer.email}</p>`,
+      });
+    }
+
+    res.json(request);
+  } catch (err) {
+    console.error("❌ Error publishing request:", err);
+    res.status(500).json({ message: "Failed to publish request" });
+  }
+};
+
+exports.getRequestById = async (req, res) => {
+  try {
+    const request = await Request.findById(req.params.id).populate("customer");
+
+    if (!request) {
+      return res.status(404).json({ message: "Request not found" });
+    }
+
+    res.json(request);
+  } catch (err) {
+    console.error("❌ Error fetching request by ID:", err);
+    res.status(500).json({ message: "Error fetching request" });
   }
 };

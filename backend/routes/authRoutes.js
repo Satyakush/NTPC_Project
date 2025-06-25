@@ -1,18 +1,21 @@
-// routes/authRoutes.js
-const express = require("express");
-const router = express.Router();
+const router = require("express").Router();
 const {
   register,
   login,
   approveUser,
-  getPendingUsers,
+  rejectUser,
+  getPendingUsers, // ✅ New controller
 } = require("../controllers/authController");
-const auth = require("../middleware/authMiddleware");
-const role = require("../middleware/roleMiddleware");
+
+const { protect } = require("../middleware/authMiddleware");
+const { isCooperative } = require("../middleware/roleMiddleware");
 
 router.post("/register", register);
 router.post("/login", login);
-router.post("/approve", auth, role("cooperative"), approveUser); // Approve user route
-router.get("/pending", auth, role("cooperative"), getPendingUsers); // Get pending users route
+
+// Cooperative-only protected routes
+router.get("/pending", protect, isCooperative, getPendingUsers); // ✅ List pending
+router.put("/approve/:userId", protect, isCooperative, approveUser);
+router.delete("/reject/:userId", protect, isCooperative, rejectUser); // ✅ Reject
 
 module.exports = router;

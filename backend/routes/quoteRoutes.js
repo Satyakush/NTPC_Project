@@ -1,20 +1,29 @@
 const express = require("express");
 const router = express.Router();
+
 const {
   submitQuote,
   getMyQuotes,
-  getQuotesByRequest,
+  getAllQuotes,
+  approveQuote,
+  rejectQuote, // add rejectQuote here
 } = require("../controllers/quoteController");
-const auth = require("../middleware/authMiddleware");
-const role = require("../middleware/roleMiddleware");
 
-// Submit a new quote (accessible by vendor role)
-router.post("/", auth, role("vendor"), submitQuote);
+const { protect } = require("../middleware/authMiddleware");
 
-// Get quotes submitted by the authenticated vendor
-router.get("/mine", auth, role("vendor"), getMyQuotes);
+// Vendor submits quote
+router.post("/:requestId", protect, submitQuote);
 
-// Get quotes for a specific request (accessible by cooperative role)
-router.get("/:requestId", auth, role("cooperative"), getQuotesByRequest);
+// Vendor views own quotes
+router.get("/mine", protect, getMyQuotes);
+
+// Cooperative views all quotes
+router.get("/all", protect, getAllQuotes);
+
+// Cooperative approves a quote
+router.put("/approve/:id", protect, approveQuote);
+
+// Cooperative rejects a quote
+router.put("/reject/:id", protect, rejectQuote); // NEW route for reject
 
 module.exports = router;

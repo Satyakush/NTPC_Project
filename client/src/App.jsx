@@ -1,74 +1,204 @@
-// src/App.jsx
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import { AuthProvider } from "./services/auth";
 import Navbar from "./components/Navbar";
-import PrivateRoute from "./components/PrivateRoute";
+import SidebarAdmin from "./components/SidebarAdmin";
+import ProtectedRoute from "./components/ProtectedRoute";
+import { AuthProvider } from "./context/AuthContext";
 
-// Auth components
-import Login from "./components/Auth/Login";
-import Register from "./components/Auth/Register";
+// Landing
+import Home from "./pages/Landing/Home";
+import About from "./pages/Landing/About";
+import Contact from "./pages/Landing/Contact";
 
-// Customer components
-import MyRequests from "./components/Customer/MyRequests";
-import CreateRequest from "./components/Customer/CreateRequest";
-import CustomerMyBills from "./components/Customer/MyBills";
+// Auth
+import Login from "./pages/Auth/Login";
+import Register from "./pages/Auth/Register";
 
-// Vendor components
-import PublishedRequests from "./components/Vendor/PublishedRequests";
-import SubmitQuote from "./components/Vendor/SubmitQuote";
-import MyQuotes from "./components/Vendor/MyQuotes";
-import MyBills from "./components/Vendor/MyBills";
+// Admin
+import AdminDashboard from "./pages/Admin/Dashboard";
+import ApproveUsers from "./pages/Admin/ApproveUsers";
+import ManageRequests from "./pages/Admin/Requests";
+import ManageQuotes from "./pages/Admin/Quotes";
+import ManageBills from "./pages/Admin/Bills";
 
-// Admin components
-import ApproveUsers from "./components/Admin/ApproveUsers";
-import PublishRequests from "./components/Admin/PublishRequests";
-import ViewQuotes from "./components/Admin/ViewQuotes";
-import ViewBills from "./components/Admin/ViewBills";
+// Customer
+import CustomerDashboard from "./pages/Customer/Dashboard";
+import CreateRequest from "./pages/Customer/CreateRequest";
+import MyRequests from "./pages/Customer/MyRequests";
+import QuotesReceived from "./pages/Customer/QuotesReceived";
+import CustomerBills from "./pages/Customer/Bills";
+
+// Vendor
+import VendorDashboard from "./pages/Vendor/Dashboard";
+import AvailableRequests from "./pages/Vendor/AvailableRequests";
+import SubmitQuote from "./pages/Vendor/SubmitQuote";
+import MyQuotes from "./pages/Vendor/MyQuotes";
+import VendorBills from "./pages/Vendor/Bills";
+
+const AdminLayout = ({ children }) => (
+  <div className="flex">
+    <SidebarAdmin />
+    <div className="flex-1 p-6">{children}</div>
+  </div>
+);
+
+function AppRoutes() {
+  return (
+    <>
+      <Navbar />
+
+      <Routes>
+        {/* Public */}
+        <Route path="/" element={<Home />} />
+        <Route path="/about" element={<About />} />
+        <Route path="/contact" element={<Contact />} />
+        <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />
+
+        {/* Admin */}
+        <Route
+          path="/admin/dashboard"
+          element={
+            <ProtectedRoute role="cooperative">
+              <AdminLayout>
+                <AdminDashboard />
+              </AdminLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/approve"
+          element={
+            <ProtectedRoute role="cooperative">
+              <AdminLayout>
+                <ApproveUsers />
+              </AdminLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/requests"
+          element={
+            <ProtectedRoute role="cooperative">
+              <AdminLayout>
+                <ManageRequests />
+              </AdminLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/quotes"
+          element={
+            <ProtectedRoute role="cooperative">
+              <AdminLayout>
+                <ManageQuotes />
+              </AdminLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/bills"
+          element={
+            <ProtectedRoute role="cooperative">
+              <AdminLayout>
+                <ManageBills />
+              </AdminLayout>
+            </ProtectedRoute>
+          }
+        />
+
+        {/* Customer */}
+        <Route
+          path="/customer/dashboard"
+          element={
+            <ProtectedRoute role="customer">
+              <CustomerDashboard />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/customer/create-request"
+          element={
+            <ProtectedRoute role="customer">
+              <CreateRequest />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/customer/requests"
+          element={
+            <ProtectedRoute role="customer">
+              <MyRequests />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/customer/quotes"
+          element={
+            <ProtectedRoute role="customer">
+              <QuotesReceived />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/customer/bills"
+          element={
+            <ProtectedRoute role="customer">
+              <CustomerBills />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* Vendor */}
+        <Route
+          path="/vendor/dashboard"
+          element={
+            <ProtectedRoute role="vendor">
+              <VendorDashboard />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/vendor/requests"
+          element={
+            <ProtectedRoute role="vendor">
+              <AvailableRequests />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/vendor/submit-quote/:requestId"
+          element={
+            <ProtectedRoute role="vendor">
+              <SubmitQuote />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/vendor/quotes"
+          element={
+            <ProtectedRoute role="vendor">
+              <MyQuotes />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/vendor/bills"
+          element={
+            <ProtectedRoute role="vendor">
+              <VendorBills />
+            </ProtectedRoute>
+          }
+        />
+      </Routes>
+    </>
+  );
+}
 
 function App() {
   return (
     <AuthProvider>
       <Router>
-        <Navbar />
-        <div className="container mx-auto p-4">
-          <Routes>
-            <Route path="/" element={<h1>Welcome to Procurement App</h1>} />
-            <Route path="/register" element={<Register />} />
-            <Route path="/login" element={<Login />} />
-
-            {/* Customer Protected Routes */}
-            <Route element={<PrivateRoute allowedRoles={["customer"]} />}>
-              <Route path="/customer/requests" element={<MyRequests />} />
-              <Route
-                path="/customer/create-request"
-                element={<CreateRequest />}
-              />
-              <Route path="/customer/bills" element={<CustomerMyBills />} />
-            </Route>
-
-            {/* Vendor Protected Routes */}
-            <Route element={<PrivateRoute allowedRoles={["vendor"]} />}>
-              <Route path="/vendor/requests" element={<PublishedRequests />} />
-              <Route
-                path="/vendor/submit-quote/:requestId"
-                element={<SubmitQuote />}
-              />
-              <Route path="/vendor/quotes" element={<MyQuotes />} />
-              <Route path="/vendor/bills" element={<MyBills />} />
-            </Route>
-
-            {/* Admin (Cooperative) Protected Routes */}
-            <Route element={<PrivateRoute allowedRoles={["cooperative"]} />}>
-              <Route path="/admin/approve-users" element={<ApproveUsers />} />
-              <Route
-                path="/admin/publish-requests"
-                element={<PublishRequests />}
-              />
-              <Route path="/admin/quotes" element={<ViewQuotes />} />
-              <Route path="/admin/bills" element={<ViewBills />} />
-            </Route>
-          </Routes>
-        </div>
+        <AppRoutes />
       </Router>
     </AuthProvider>
   );

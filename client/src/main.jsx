@@ -1,11 +1,12 @@
-// src/main.jsx
 import React from "react";
 import ReactDOM from "react-dom/client";
-import App from "./App.jsx";
-import "./index.css"; // Tailwind CSS
+import App from "./App";
+import "./styles/global.css"; // Tailwind/global CSS
+import { ChakraProvider } from "@chakra-ui/react";
+import { AuthProvider } from "./context/AuthContext.jsx"; // ✅ Add this line
 
 ReactDOM.createRoot(document.getElementById("root")).render(
-  <React.StrictMode>
+  <AuthProvider>
     <App />
-  </React.StrictMode>
+  </AuthProvider>
 );

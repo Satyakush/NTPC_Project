@@ -2,23 +2,23 @@ const express = require("express");
 const router = express.Router();
 const {
   createRequest,
-  publishRequest,
   getMyRequests,
+  getVendorItems,
   getAllRequests,
+  getPublishedRequests,
+  publishRequest,
+  getRequestById,
 } = require("../controllers/requestController");
-const auth = require("../middleware/authMiddleware");
-const role = require("../middleware/roleMiddleware");
 
-// Create a new request (accessible by customer role)
-router.post("/", auth, role("customer"), createRequest);
+const { protect } = require("../middleware/authMiddleware");
 
-// Publish a request (accessible by cooperative role)
-router.post("/publish", auth, role("cooperative"), publishRequest);
-
-// Get requests made by the authenticated customer
-router.get("/mine", auth, role("customer"), getMyRequests);
-
-// Get all requests (accessible by cooperative role)
-router.get("/", auth, role("cooperative"), getAllRequests);
+// Order matters: put specific routes before generic ones
+router.post("/", protect, createRequest);
+router.get("/mine", protect, getMyRequests);
+router.get("/vendor-items", protect, getVendorItems);
+router.get("/all", protect, getAllRequests);
+router.get("/published", protect, getPublishedRequests);
+router.put("/publish/:id", protect, publishRequest);
+router.get("/:id", protect, getRequestById); // <-- this MUST be last
 
 module.exports = router;

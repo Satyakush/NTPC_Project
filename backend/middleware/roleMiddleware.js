@@ -1,10 +1,7 @@
-const roleMiddleware = (...roles) => {
-  return (req, res, next) => {
-    if (!roles.includes(req.user.role)) {
-      return res.status(403).json({ message: "Access denied for your role." });
-    }
-    next();
-  };
+// middleware/roleMiddleware.js
+exports.isCooperative = (req, res, next) => {
+  if (req.user.role !== "cooperative") {
+    return res.status(403).json({ message: "Access denied" });
+  }
+  next();
 };
-
-module.exports = roleMiddleware;

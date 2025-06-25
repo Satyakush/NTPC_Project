@@ -1,133 +1,178 @@
-// controllers/authController.js
 const User = require("../models/User");
+const VendorItem = require("../models/VendorItem");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const transporter = require("../config/mailer");
 
-// REGISTER NEW USER
+// Register New User
 exports.register = async (req, res) => {
+  const {
+    name,
+    email,
+    password,
+    role,
+    note,
+    organization,
+    gstin,
+    vendorItems = [],
+  } = req.body;
+
   try {
-    const {
-      name,
-      email,
-      phone,
-      organization,
-      address,
-      gstNumber,
-      password,
-      isVendor,
-      role,
-    } = req.body;
-
-    // Optional: Validate role
-    if (!["customer", "vendor", "cooperative"].includes(role)) {
-      return res.status(400).json({ message: "Invalid role provided" });
-    }
-
-    const existingUser = await User.findOne({ email });
-    if (existingUser) {
-      return res.status(400).json({ message: "Email already registered" });
+    const existing = await User.findOne({ email });
+    if (existing) {
+      return res.status(400).json({ message: "User already exists" });
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    const newUser = new User({
+    const user = await User.create({
       name,
       email,
-      phone,
-      organization,
-      address,
-      gstNumber,
       password: hashedPassword,
-      isVendor,
-      isApproved: false, // wait for approval
       role,
+      note,
+      organization: role === "vendor" ? organization : undefined,
+      gstin: role === "vendor" ? gstin : undefined,
+      isApproved: false,
     });
 
-    await newUser.save();
+    if (role === "vendor" && Array.isArray(vendorItems)) {
+      await Promise.all(
+        vendorItems.map((item) =>
+          VendorItem.create({
+            vendor: user._id,
+            name: item.name,
+            description: item.description,
+          })
+        )
+      );
+    }
 
     await transporter.sendMail({
-      from: process.env.COOP_EMAIL,
-      to: email,
-      subject: "Registration Submitted",
-      text: "Your account is pending approval by the cooperative.",
+      to: process.env.COOP_EMAIL,
+      subject: "🔐 New User Registration Pending",
+      html: `
+        <h3>${role.toUpperCase()} Registration</h3>
+        <p><strong>Email:</strong> ${email}</p>
+        ${
+          role === "vendor"
+            ? `
+          <p><strong>Organization:</strong> ${organization}</p>
+          <p><strong>GSTIN:</strong> ${gstin}</p>
+          <p><strong>Items:</strong>
+            <ul>${vendorItems
+              .map((i) => `<li>${i.name}: ${i.description}</li>`)
+              .join("")}</ul>
+          </p>`
+            : `<p><strong>Note:</strong> ${note}</p>`
+        }
+      `,
     });
 
-    res
-      .status(201)
-      .json({ message: "User  registered successfully. Pending approval." });
-  } catch (error) {
-    console.error("Registration error:", error.message);
-    res.status(500).json({ message: "Server error during registration" });
+    res.status(201).json({
+      message: "Registration submitted. Await admin approval.",
+    });
+  } catch (err) {
+    console.error("Register error:", err);
+    res.status(500).json({ message: "Error registering user" });
   }
 };
 
-// LOGIN EXISTING USER
+// Login
 exports.login = async (req, res) => {
+  const { email, password } = req.body;
   try {
-    const { email, password } = req.body;
     const user = await User.findOne({ email });
-    if (!user) {
-      return res
-        .status(404)
-        .json({ message: "User  not found with that email" });
+    if (!user || !user.isApproved) {
+      return res.status(401).json({ message: "Access denied" });
     }
 
-    const passwordMatch = await bcrypt.compare(password, user.password);
-    if (!passwordMatch) {
-      return res.status(401).json({ message: "Invalid password" });
-    }
-
-    if (!user.isApproved) {
-      return res.status(403).json({ message: "Account not approved yet" });
-    }
+    const isValid = await bcrypt.compare(password, user.password);
+    if (!isValid)
+      return res.status(401).json({ message: "Invalid credentials" });
 
     const token = jwt.sign(
       { id: user._id, role: user.role },
-      process.env.JWT_SECRET,
-      { expiresIn: "1h" }
+      process.env.JWT_SECRET
     );
 
-    res.status(200).json({ token, user });
-  } catch (error) {
-    console.error("Login error:", error.message);
-    res.status(500).json({ message: "Server error during login" });
-  }
-};
-
-// APPROVE USER BY COOPERATIVE
-exports.approveUser = async (req, res) => {
-  try {
-    const { userId } = req.body;
-    const user = await User.findById(userId);
-    if (!user) {
-      return res.status(404).json({ message: "User  not found for approval" });
-    }
-
-    user.isApproved = true;
-    await user.save();
-
-    await transporter.sendMail({
-      from: process.env.COOP_EMAIL,
-      to: user.email,
-      subject: "Account Approved",
-      text: "Your registration has been approved. You can now log in.",
+    res.status(200).json({
+      token,
+      user: { name: user.name, email: user.email, role: user.role },
     });
-
-    res.json({ message: "User  approved successfully" });
-  } catch (error) {
-    console.error("Approval error:", error.message);
-    res.status(500).json({ message: "Server error during user approval" });
+  } catch (err) {
+    console.error("Login error:", err);
+    res.status(500).json({ message: "Login error" });
   }
 };
 
-// GET PENDING USERS
+// ✅ Get All Pending Users (with Vendor Items)
 exports.getPendingUsers = async (req, res) => {
   try {
-    const pendingUsers = await User.find({ isApproved: false });
-    res.json(pendingUsers);
-  } catch (error) {
-    console.error("Error fetching pending users:", error.message);
-    res.status(500).json({ message: "Server error" });
+    const users = await User.find({ isApproved: false }).lean();
+
+    const enriched = await Promise.all(
+      users.map(async (u) => {
+        if (u.role === "vendor") {
+          const items = await VendorItem.find({ vendor: u._id }).lean();
+          return { ...u, vendorItems: items };
+        }
+        return u;
+      })
+    );
+
+    res.status(200).json(enriched);
+  } catch (err) {
+    console.error("Fetch pending users error:", err);
+    res.status(500).json({ message: "Failed to fetch pending users" });
+  }
+};
+
+// Approve User
+exports.approveUser = async (req, res) => {
+  const { userId } = req.params;
+  try {
+    const user = await User.findByIdAndUpdate(
+      userId,
+      { isApproved: true },
+      { new: true }
+    );
+
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    await transporter.sendMail({
+      to: user.email,
+      subject: "🎉 Your account is approved",
+      html: `<p>You can now log in using:</p>
+             <p><strong>Email:</strong> ${user.email}</p>
+             <p><strong>Password:</strong> your set password</p>`,
+    });
+
+    res.status(200).json({ message: "User approved" });
+  } catch (err) {
+    console.error("Approval error:", err);
+    res.status(500).json({ message: "Approval error" });
+  }
+};
+
+// Reject User
+exports.rejectUser = async (req, res) => {
+  const { userId } = req.params;
+  try {
+    const user = await User.findByIdAndDelete(userId);
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    await VendorItem.deleteMany({ vendor: user._id }); // 🧹 cleanup vendor items
+
+    await transporter.sendMail({
+      to: user.email,
+      subject: "❌ Registration Rejected",
+      html: `<p>Sorry, your registration has been rejected. If you think this was a mistake, please contact the cooperative.</p>`,
+    });
+
+    res.status(200).json({ message: "User rejected and deleted" });
+  } catch (err) {
+    console.error("Rejection error:", err);
+    res.status(500).json({ message: "Rejection error" });
   }
 };
