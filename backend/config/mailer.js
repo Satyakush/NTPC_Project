@@ -4,27 +4,32 @@ let transporter;
 const queue = [];
 
 (async () => {
-  transporter = nodemailer.createTransport({
-    host: process.env.MAIL_HOST,
-    port: process.env.MAIL_PORT,
-    auth: {
-      user: process.env.MAIL_USER,
-      pass: process.env.MAIL_PASS,
-    },
-  });
-
   try {
-    await transporter.verify();
-    console.log("📬 Mailer ready");
-  } catch (e) {
-    console.error("❌ Mailer error:", e);
-  }
+    // Create a test account
+    const testAccount = await nodemailer.createTestAccount();
 
-  for (const { args, resolve, reject } of queue) {
-    transporter
-      .sendMail(...args)
-      .then(resolve)
-      .catch(reject);
+    transporter = nodemailer.createTransport({
+      host: "smtp.ethereal.email",
+      port: 587,
+      auth: {
+        user: testAccount.user,
+        pass: testAccount.pass,
+      },
+    });
+
+    await transporter.verify();
+    console.log("📬 Mailer ready (Ethereal test account)");
+    console.log(`📧 Test email user: ${testAccount.user}`);
+    console.log(`🔑 Test email pass: ${testAccount.pass}`);
+
+    for (const { args, resolve, reject } of queue) {
+      transporter
+        .sendMail(...args)
+        .then(resolve)
+        .catch(reject);
+    }
+  } catch (e) {
+    console.error("❌ Mailer setup error:", e);
   }
 })();
 
