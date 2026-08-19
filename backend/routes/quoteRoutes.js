@@ -10,10 +10,12 @@ const {
 } = require("../controllers/quoteController");
 
 const { protect } = require("../middleware/authMiddleware");
-const { isCooperative } = require("../middleware/roleMiddleware");
+const { isCooperative,
+        isVendor,
+ } = require("../middleware/roleMiddleware");
 
 // Vendor submits quote
-router.post("/:requestId", protect, submitQuote);
+router.post("/:requestId", protect, isVendor, submitQuote);
 
 // Vendor views own quotes
 router.get("/mine", protect, getMyQuotes);
@@ -22,9 +24,19 @@ router.get("/mine", protect, getMyQuotes);
 router.get("/all", protect, isCooperative, getAllQuotes);
 
 // Cooperative approves a quote
-router.put("/approve/:id", protect, isCooperative, approveQuote);
+router.put(
+  "/approve/:id",
+  protect,
+  isCooperative,
+  approveQuote
+);
 
 // Cooperative rejects a quote
-router.put("/reject/:id", protect, isCooperative, rejectQuote);
+router.put(
+  "/reject/:id",
+  protect,
+  isCooperative,
+  rejectQuote
+);
 
 module.exports = router;

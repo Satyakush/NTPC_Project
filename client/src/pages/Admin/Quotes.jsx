@@ -45,10 +45,15 @@ const ManageQuotes = () => {
     <div className="p-6">
       <h2 className="text-xl font-bold mb-4">Manage Quotes</h2>
       {Object.entries(groupByRequest).map(([requestId, quoteGroup]) => {
-        // Find lowest price among quotes for this request
-        const lowest = quoteGroup.reduce((min, q) =>
-          q.price < min.price ? q : min
-        );
+        const lowestByItem = quoteGroup.reduce((acc, quote) => {
+  const itemName = quote.item.name.trim().toLowerCase();
+
+  if (!acc[itemName] || quote.price < acc[itemName].price) {
+    acc[itemName] = quote;
+  }
+
+  return acc;
+}, {});
 
         return (
           <div key={requestId} className="mb-6 p-4 border rounded">
@@ -79,11 +84,12 @@ const ManageQuotes = () => {
                   </span>
                 </p>
 
-                {q._id === lowest._id && q.status === "pending" && (
-                  <span className="text-green-600 font-semibold mr-2">
-                    Lowest Quote ✅
-                  </span>
-                )}
+                {lowestByItem[q.item.name.trim().toLowerCase()]?._id === q._id &&
+  q.status === "pending" && (
+    <span className="text-green-600 font-semibold mr-2">
+      Lowest for this item ✅
+    </span>
+  )}
 
                 {q.status === "pending" && (
                   <div className="mt-1">

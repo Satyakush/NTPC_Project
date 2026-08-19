@@ -90,39 +90,60 @@ exports.getPublishedRequests = async (req, res) => {
 exports.publishRequest = async (req, res) => {
   try {
     if (req.user.role !== "cooperative") {
-      return res
-        .status(403)
-        .json({ message: "Only cooperative can publish requests" });
+      return res.status(403).json({
+        message: "Only cooperative can publish requests",
+      });
     }
 
-    const request = await Request.findByIdAndUpdate(
-      req.params.id,
-      { status: "published" },
-      { new: true }
-    ).populate("customer");
+    const request = await Request.findById(req.params.id);
 
     if (!request) {
-      return res.status(404).json({ message: "Request not found" });
+      return res.status(404).json({
+        message: "Request not found",
+      });
     }
+
+    if (!["draft", "pending"].includes(request.status)) {
+      return res.status(400).json({
+        message: `Request cannot be published from '${request.status}' status`,
+      });
+    }
+
+    request.status = "published";
+    await request.save();
+
+    await request.populate("customer");
 
     const vendors = await User.find({ role: "vendor" });
 
-    for (let vendor of vendors) {
+    for (const vendor of vendors) {
       await transporter.sendMail({
         to: vendor.email,
         subject: "📢 New Request Available",
-        html: `<p>Hello Vendor,</p>
-               <p>A new request (<strong>${request.requestId}</strong>) has been published.</p>
-               <p>Customer: ${request.customer.email}</p>`,
+        html: `
+          <p>Hello Vendor,</p>
+          <p>
+            A new request
+            (<strong>${request.requestId}</strong>)
+            has been published.
+          </p>
+          <p>
+            Customer: ${request.customer.email}
+          </p>
+        `,
       });
     }
 
     res.json(request);
   } catch (err) {
     console.error("❌ Error publishing request:", err);
-    res.status(500).json({ message: "Failed to publish request" });
+
+    res.status(500).json({
+      message: "Failed to publish request",
+    });
   }
 };
+
 
 exports.getRequestById = async (req, res) => {
   try {

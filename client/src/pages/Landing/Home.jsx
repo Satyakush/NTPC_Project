@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Moon, Sun, ArrowDown } from "lucide-react";
@@ -7,18 +7,15 @@ import video from "../../assets/login_video.mp4";
 const Home = () => {
   const [darkMode, setDarkMode] = useState(true);
 
-  useEffect(() => {
-    document.body.classList.toggle("dark", darkMode);
-  }, [darkMode]);
 
   const toggleDark = () => setDarkMode((prev) => !prev);
 
   return (
     <div
-      className={`relative min-h-screen overflow-hidden ${
-        darkMode ? "bg-black" : "bg-white"
-      }`}
-    >
+  className={`relative min-h-screen overflow-hidden ${
+    darkMode ? "bg-black text-white" : "bg-white text-gray-900"
+  }`}
+>
       {/* 🎥 Background Video */}
       <video
         autoPlay
@@ -31,8 +28,11 @@ const Home = () => {
       </video>
 
       {/* 💡 Animated Light Flare Overlay */}
-      <div className="absolute inset-0 bg-gradient-to-br from-transparent via-white/10 to-white/5 dark:via-white/10 animate-pulse z-10 pointer-events-none" />
-
+<div
+  className={`absolute inset-0 bg-gradient-to-br from-transparent ${
+    darkMode ? "via-white/10 to-white/5" : "via-blue-100/20 to-white/20"
+  } animate-pulse z-10 pointer-events-none`}
+/>
       {/* 🌘 Dark Mode Toggle */}
       <button
         className="absolute top-5 right-5 z-30 bg-black/50 text-white rounded-full p-2 backdrop-blur hover:scale-105 transition"
@@ -99,10 +99,19 @@ const Home = () => {
         whileInView={{ opacity: 1, y: [40, 0] }}
         transition={{ duration: 1.2 }}
       >
-        <h2 className="text-4xl font-bold mb-4 text-black dark:text-white">
+         
+         <h2
+  className={`text-4xl font-bold mb-4 ${
+    darkMode ? "text-white" : "text-gray-900"
+  }`}
+>
           Why ProcureHub?
         </h2>
-        <p className="max-w-2xl text-lg text-gray-700 dark:text-gray-300">
+         <p
+  className={`max-w-2xl text-lg ${
+    darkMode ? "text-gray-300" : "text-gray-700"
+  }`}
+>
           Real-time request tracking, quote comparison, cooperative control —
           all in one streamlined solution. Designed for powerhouses like NTPC
           and beyond.

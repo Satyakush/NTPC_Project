@@ -17,6 +17,12 @@ exports.register = async (req, res) => {
     vendorItems = [],
   } = req.body;
 
+  if (!["customer", "vendor"].includes(role)) {
+  return res.status(400).json({
+    message: "Only customer and vendor registration is allowed.",
+  });
+}
+
   try {
     const existing = await User.findOne({ email });
     if (existing) {
