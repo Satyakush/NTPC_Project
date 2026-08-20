@@ -2,13 +2,7 @@ import { motion, useScroll, useSpring } from "framer-motion";
 import { useInView } from "react-intersection-observer";
 import { ParallaxProvider, Parallax } from "react-scroll-parallax";
 import { Zap, Eye, Flag, Building2 } from "lucide-react";
-
-const gradients = [
-  "from-blue-900 via-indigo-800 to-purple-900",
-  "from-green-900 via-emerald-700 to-teal-800",
-  "from-yellow-700 via-orange-600 to-red-700",
-  "from-zinc-800 via-slate-700 to-gray-900",
-];
+import video from "../../assets/about_video.mp4";
 
 const iconMap = [Zap, Eye, Flag, Building2];
 
@@ -20,61 +14,110 @@ const sectionVariants = (direction = "left") => ({
   visible: {
     opacity: 1,
     x: 0,
-    transition: { duration: 1, ease: "easeOut" },
+    transition: {
+      duration: 1,
+      ease: "easeOut",
+    },
   },
 });
 
-const MotionSection = ({ title, content, index, direction = "left" }) => {
-  const { ref, inView } = useInView({ triggerOnce: true, threshold: 0.2 });
+const MotionSection = ({
+  title,
+  content,
+  index,
+  direction = "left",
+}) => {
+  const { ref, inView } = useInView({
+    triggerOnce: true,
+    threshold: 0.2,
+  });
+
   const Icon = iconMap[index % iconMap.length];
-  const gradient = gradients[index % gradients.length];
 
   return (
-    <div
-      className={`min-h-screen flex items-center justify-center bg-gradient-to-br ${gradient} transition-all duration-1000`}
-    >
+    <section className="relative min-h-screen overflow-hidden flex items-center justify-center">
+
+      {/* Background Video */}
+      <video
+        autoPlay
+        loop
+        muted
+        playsInline
+        className="absolute inset-0 w-full h-full object-cover"
+      >
+        <source src={video} type="video/mp4" />
+      </video>
+
+      {/* Dark Overlay */}
+      <div className="absolute inset-0 bg-black/60" />
+
+      {/* Content */}
       <motion.div
         ref={ref}
         variants={sectionVariants(direction)}
         initial="hidden"
         animate={inView ? "visible" : "hidden"}
-        className="relative z-10 max-w-4xl w-full text-white px-8 py-12 backdrop-blur-xl bg-white/10 rounded-2xl shadow-2xl border border-white/20"
+        className="relative z-10 max-w-4xl w-full text-white mx-6 px-8 py-12 backdrop-blur-xl bg-white/10 rounded-2xl shadow-2xl border border-white/20"
       >
         <Parallax speed={index % 2 === 0 ? -10 : 10}>
+
+          {/* Icon */}
           <motion.div
             className="flex justify-center mb-6"
             initial={{ scale: 0.5, opacity: 0 }}
-            animate={inView ? { scale: 1, opacity: 1 } : {}}
+            animate={
+              inView
+                ? { scale: 1, opacity: 1 }
+                : {}
+            }
             transition={{ duration: 0.8 }}
           >
             <Icon className="w-16 h-16 text-white animate-pulse" />
           </motion.div>
 
+          {/* Title */}
           <motion.h2
             className="text-4xl md:text-5xl font-extrabold mb-6 tracking-tight text-center"
             initial={{ y: 30, opacity: 0 }}
-            animate={inView ? { y: 0, opacity: 1 } : {}}
-            transition={{ duration: 1, delay: 0.2 }}
+            animate={
+              inView
+                ? { y: 0, opacity: 1 }
+                : {}
+            }
+            transition={{
+              duration: 1,
+              delay: 0.2,
+            }}
           >
             {title}
           </motion.h2>
 
+          {/* Content */}
           <motion.p
             className="text-lg md:text-xl leading-relaxed text-white/90 text-center"
             initial={{ y: 20, opacity: 0 }}
-            animate={inView ? { y: 0, opacity: 1 } : {}}
-            transition={{ duration: 1.2, delay: 0.4 }}
+            animate={
+              inView
+                ? { y: 0, opacity: 1 }
+                : {}
+            }
+            transition={{
+              duration: 1.2,
+              delay: 0.4,
+            }}
           >
             {content}
           </motion.p>
+
         </Parallax>
       </motion.div>
-    </div>
+    </section>
   );
 };
 
 const ScrollProgress = () => {
   const { scrollYProgress } = useScroll();
+
   const scaleX = useSpring(scrollYProgress, {
     stiffness: 200,
     damping: 30,
@@ -93,6 +136,7 @@ export default function About() {
   return (
     <ParallaxProvider>
       <div className="overflow-x-hidden scroll-smooth bg-black text-white">
+
         <ScrollProgress />
 
         <MotionSection
@@ -122,6 +166,7 @@ export default function About() {
           index={3}
           direction="right"
         />
+
       </div>
     </ParallaxProvider>
   );

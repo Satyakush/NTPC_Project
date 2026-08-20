@@ -5,7 +5,6 @@ const queue = [];
 
 (async () => {
   try {
-    // Create a test account
     const testAccount = await nodemailer.createTestAccount();
 
     transporter = nodemailer.createTransport({
@@ -18,26 +17,49 @@ const queue = [];
     });
 
     await transporter.verify();
+
     console.log("📬 Mailer ready (Ethereal test account)");
     console.log(`📧 Test email user: ${testAccount.user}`);
     console.log(`🔑 Test email pass: ${testAccount.pass}`);
 
-    for (const { args, resolve, reject } of queue) {
-      transporter
-        .sendMail(...args)
-        .then(resolve)
-        .catch(reject);
+    // Process emails that were requested before transporter was ready
+    for (const args of queue) {
+      sendInBackground(args);
     }
+
+    queue.length = 0;
   } catch (e) {
     console.error("❌ Mailer setup error:", e);
   }
 })();
 
+function sendInBackground(args) {
+  if (!transporter) {
+    queue.push(args);
+    return;
+  }
+
+  transporter
+    .sendMail(...args)
+    .then((info) => {
+      console.log("📧 Email sent:", info.messageId);
+
+      const previewUrl = nodemailer.getTestMessageUrl(info);
+
+      if (previewUrl) {
+        console.log("🔗 Email preview:", previewUrl);
+      }
+    })
+    .catch((err) => {
+      console.error("❌ Background email failed:", err);
+    });
+}
+
 module.exports = {
-  sendMail: async (...args) => {
-    if (transporter) return transporter.sendMail(...args);
-    return new Promise((resolve, reject) =>
-      queue.push({ args, resolve, reject })
-    );
+  sendMail: (...args) => {
+    sendInBackground(args);
+
+    // Immediately resolve so controllers don't wait for email
+    return Promise.resolve();
   },
 };

@@ -10,98 +10,93 @@ const Navbar = () => {
     navigate("/");
   };
 
+  const getRoleLabel = (role) => {
+    if (role === "cooperative") return "Cooperative Admin";
+    if (role === "customer") return "Customer";
+    if (role === "vendor") return "Vendor";
+    return "User";
+  };
+
+  const getHomePath = () => {
+    if (!user) return "/";
+
+    switch (user.role) {
+      case "cooperative":
+        return "/admin/dashboard";
+      case "customer":
+        return "/customer/dashboard";
+      case "vendor":
+        return "/vendor/dashboard";
+      default:
+        return "/";
+    }
+  };
+
   return (
     <nav className="bg-gray-900 text-white px-6 py-3 flex justify-between items-center">
-      {/* Brand */}
+      {/* Brand + Public Navigation */}
       <div className="flex items-center space-x-6">
-        <Link to="/" className="text-xl font-bold">
+        <Link
+          to={getHomePath()}
+          className="text-xl font-bold"
+        >
           ProcureHub
         </Link>
+
+        {/* Only show public navigation when logged out */}
         {!user && (
           <>
-            <Link to="/" className="hover:underline">
-              Home
-            </Link>
-            <Link to="/about" className="hover:underline">
+            <Link
+              to="/about"
+              className="hover:underline"
+            >
               About
             </Link>
-            <Link to="/contact" className="hover:underline">
+
+            <Link
+              to="/contact"
+              className="hover:underline"
+            >
               Contact
             </Link>
           </>
         )}
       </div>
 
-      {/* Authenticated Links */}
-      <div className="space-x-4 flex items-center">
+      {/* Authentication / User Information */}
+      <div className="flex items-center gap-5">
         {!user ? (
           <>
-            <Link to="/login" className="hover:underline">
+            <Link
+              to="/login"
+              className="hover:underline"
+            >
               Login
             </Link>
-            <Link to="/register" className="hover:underline">
+
+            <Link
+              to="/register"
+              className="hover:underline"
+            >
               Register
             </Link>
           </>
         ) : (
           <>
-            {user.role === "cooperative" && (
-              <>
-                <Link to="/admin/dashboard" className="hover:underline">
-                  Dashboard
-                </Link>
-                <Link to="/admin/approve" className="hover:underline">
-                  Approve
-                </Link>
-                <Link to="/admin/requests" className="hover:underline">
-                  Requests
-                </Link>
-                <Link to="/admin/quotes" className="hover:underline">
-                  Quotes
-                </Link>
-                <Link to="/admin/bills" className="hover:underline">
-                  Bills
-                </Link>
-              </>
-            )}
-            {user.role === "customer" && (
-              <>
-                <Link to="/customer/dashboard" className="hover:underline">
-                  Dashboard
-                </Link>
-                <Link to="/customer/create-request" className="hover:underline">
-                  New Request
-                </Link>
-                <Link to="/customer/requests" className="hover:underline">
-                  My Requests
-                </Link>
-                <Link to="/customer/quotes" className="hover:underline">
-                  Quotes
-                </Link>
-                <Link to="/customer/bills" className="hover:underline">
-                  Bills
-                </Link>
-              </>
-            )}
-            {user.role === "vendor" && (
-              <>
-                <Link to="/vendor/dashboard" className="hover:underline">
-                  Dashboard
-                </Link>
-                <Link to="/vendor/requests" className="hover:underline">
-                  Available
-                </Link>
-                <Link to="/vendor/quotes" className="hover:underline">
-                  My Quotes
-                </Link>
-                <Link to="/vendor/bills" className="hover:underline">
-                  Bills
-                </Link>
-              </>
-            )}
+            {/* Current Logged-in User */}
+            <div className="text-right">
+              <p className="font-semibold">
+                {user.name || "User"}
+              </p>
+
+              <p className="text-xs text-gray-400">
+                {getRoleLabel(user.role)}
+              </p>
+            </div>
+
             <button
               onClick={handleLogout}
-              className="bg-red-500 hover:bg-red-600 px-3 py-1 rounded text-white"
+              className="bg-red-500 hover:bg-red-600 px-3 py-2 rounded text-white"
             >
               Logout
             </button>
