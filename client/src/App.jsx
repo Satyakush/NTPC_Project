@@ -1,8 +1,9 @@
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
+
 import Navbar from "./components/Navbar";
 import SidebarAdmin from "./components/SidebarAdmin";
 import ProtectedRoute from "./components/ProtectedRoute";
-import { AuthProvider } from "./context/AuthContext";
+import { AuthProvider, useAuth } from "./context/AuthContext";
 
 // Landing
 import Home from "./pages/Landing/Home";
@@ -33,6 +34,7 @@ import AvailableRequests from "./pages/Vendor/AvailableRequests";
 import SubmitQuote from "./pages/Vendor/SubmitQuote";
 import MyQuotes from "./pages/Vendor/MyQuotes";
 import VendorBills from "./pages/Vendor/Bills";
+import VendorProfile from "./pages/Vendor/Profile";
 
 const AdminLayout = ({ children }) => (
   <div className="flex">
@@ -41,14 +43,45 @@ const AdminLayout = ({ children }) => (
   </div>
 );
 
+// Role-aware home route
+const HomeRedirect = () => {
+  const { user, loading } = useAuth();
+
+  if (loading) {
+    return null;
+  }
+
+  // Logged out → public landing page
+  if (!user) {
+    return <Home />;
+  }
+
+  // Logged in → role-specific dashboard
+  switch (user.role) {
+    case "customer":
+      return <Navigate to="/customer/dashboard" replace />;
+
+    case "vendor":
+      return <Navigate to="/vendor/dashboard" replace />;
+
+    case "cooperative":
+      return <Navigate to="/admin/dashboard" replace />;
+
+    default:
+      return <Home />;
+  }
+};
+
 function AppRoutes() {
   return (
     <>
       <Navbar />
 
       <Routes>
+        {/* Home */}
+        <Route path="/" element={<HomeRedirect />} />
+
         {/* Public */}
-        <Route path="/" element={<Home />} />
         <Route path="/about" element={<About />} />
         <Route path="/contact" element={<Contact />} />
         <Route path="/login" element={<Login />} />
@@ -65,6 +98,7 @@ function AppRoutes() {
             </ProtectedRoute>
           }
         />
+
         <Route
           path="/admin/approve"
           element={
@@ -75,6 +109,7 @@ function AppRoutes() {
             </ProtectedRoute>
           }
         />
+
         <Route
           path="/admin/requests"
           element={
@@ -85,6 +120,7 @@ function AppRoutes() {
             </ProtectedRoute>
           }
         />
+
         <Route
           path="/admin/quotes"
           element={
@@ -95,6 +131,7 @@ function AppRoutes() {
             </ProtectedRoute>
           }
         />
+
         <Route
           path="/admin/bills"
           element={
@@ -115,6 +152,7 @@ function AppRoutes() {
             </ProtectedRoute>
           }
         />
+
         <Route
           path="/customer/create-request"
           element={
@@ -123,6 +161,7 @@ function AppRoutes() {
             </ProtectedRoute>
           }
         />
+
         <Route
           path="/customer/requests"
           element={
@@ -131,6 +170,7 @@ function AppRoutes() {
             </ProtectedRoute>
           }
         />
+
         <Route
           path="/customer/quotes"
           element={
@@ -139,6 +179,7 @@ function AppRoutes() {
             </ProtectedRoute>
           }
         />
+
         <Route
           path="/customer/bills"
           element={
@@ -157,6 +198,7 @@ function AppRoutes() {
             </ProtectedRoute>
           }
         />
+
         <Route
           path="/vendor/requests"
           element={
@@ -165,6 +207,7 @@ function AppRoutes() {
             </ProtectedRoute>
           }
         />
+
         <Route
           path="/vendor/submit-quote/:requestId"
           element={
@@ -173,6 +216,7 @@ function AppRoutes() {
             </ProtectedRoute>
           }
         />
+
         <Route
           path="/vendor/quotes"
           element={
@@ -181,11 +225,21 @@ function AppRoutes() {
             </ProtectedRoute>
           }
         />
+
         <Route
           path="/vendor/bills"
           element={
             <ProtectedRoute role="vendor">
               <VendorBills />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/vendor/profile"
+          element={
+            <ProtectedRoute role="vendor">
+              <VendorProfile />
             </ProtectedRoute>
           }
         />

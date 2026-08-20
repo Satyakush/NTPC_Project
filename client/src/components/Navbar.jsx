@@ -11,7 +11,7 @@ const Navbar = () => {
   };
 
   const getRoleLabel = (role) => {
-    if (role === "cooperative") return "Cooperative Admin";
+    if (role === "cooperative") return "Administrator";
     if (role === "customer") return "Customer";
     if (role === "vendor") return "Vendor";
     return "User";

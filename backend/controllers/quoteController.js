@@ -118,6 +118,34 @@ exports.getMyQuotes = async (req, res) => {
   }
 };
 
+
+// Get all quotes received for the current customer
+exports.getReceivedQuotes = async (req, res) => {
+  try {
+    const requests = await Request.find({
+      customer: req.user.id,
+    }).select("_id");
+
+    const requestIds = requests.map((request) => request._id);
+
+    const quotes = await Quote.find({
+      request: { $in: requestIds },
+    })
+      .populate("vendor", "name email organization gstin")
+      .populate("request", "requestId")
+      .sort({ createdAt: -1 });
+
+    res.json(quotes);
+  } catch (err) {
+    console.error("❌ Error fetching received quotes:", err);
+
+    res.status(500).json({
+      message: "Error fetching received quotes.",
+    });
+  }
+};
+
+
 // Get all quotes for cooperative/admin
 exports.getAllQuotes = async (req, res) => {
   try {

@@ -4,6 +4,7 @@ const router = express.Router();
 const {
   submitQuote,
   getMyQuotes,
+  getReceivedQuotes,
   getAllQuotes,
   approveQuote,
   rejectQuote,
@@ -19,6 +20,9 @@ router.post("/:requestId", protect, isVendor, submitQuote);
 
 // Vendor views own quotes
 router.get("/mine", protect, getMyQuotes);
+
+// Customer views quotes received for their requests
+router.get("/received", protect, getReceivedQuotes);
 
 // Cooperative views all quotes
 router.get("/all", protect, isCooperative, getAllQuotes);
