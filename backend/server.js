@@ -23,6 +23,7 @@ app.use(
   })
 );
 
+app.use("/api/payment-webhooks", require("./routes/paymentWebhookRoutes"));
 app.use(express.json());
 
 app.use("/api/auth", require("./routes/authRoutes"));
