@@ -12,8 +12,7 @@ exports.createRequest = async (req, res) => {
     const { items, remarks, isDraft } = req.body;
     const customerId = req.user.id;
 
-    const reqCount = await Request.countDocuments();
-    const requestId = generateRequestId(reqCount + 1);
+    const requestId = await generateRequestId();
 
     const newRequest = await Request.create({
       requestId,
@@ -144,7 +143,6 @@ exports.publishRequest = async (req, res) => {
   }
 };
 
-
 exports.getRequestById = async (req, res) => {
   try {
     const request = await Request.findById(req.params.id).populate("customer");
@@ -214,8 +212,7 @@ exports.finalizeRequest = async (req, res) => {
     );
 
     const invalidQuotes = approvedQuotes.filter(
-      (quote) =>
-        !requestItemNames.has(quote.item.name.trim().toLowerCase())
+      (quote) => !requestItemNames.has(quote.item.name.trim().toLowerCase())
     );
 
     if (invalidQuotes.length > 0) {
@@ -254,8 +251,7 @@ exports.finalizeRequest = async (req, res) => {
     }
 
     const missingItems = request.items.filter(
-      (item) =>
-        !approvedItemNames.has(item.name.trim().toLowerCase())
+      (item) => !approvedItemNames.has(item.name.trim().toLowerCase())
     );
 
     if (missingItems.length > 0) {
@@ -307,7 +303,6 @@ exports.finalizeRequest = async (req, res) => {
       }
 
       const commission = vendorAmount * 0.08;
-
       const customerTotal = vendorAmount + commission;
 
       const bill = await Bill.create(
