@@ -29,6 +29,7 @@ app.use("/api/auth", require("./routes/authRoutes"));
 app.use("/api/requests", require("./routes/requestRoutes"));
 app.use("/api/quotes", require("./routes/quoteRoutes"));
 app.use("/api/bills", require("./routes/billRoutes"));
+app.use("/api/payments", require("./routes/paymentRoutes"));
 app.use("/api/dashboard", require("./routes/dashboardRoutes"));
 
 app.get("/", (req, res) => res.send("✅ Backend is running"));
