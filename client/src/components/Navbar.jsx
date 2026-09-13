@@ -1,12 +1,16 @@
+import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { Menu, X } from "lucide-react";
 import { useAuth } from "../context/AuthContext.jsx";
 
 const Navbar = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   const handleLogout = () => {
     logout();
+    setIsMenuOpen(false);
     navigate("/");
   };
 
@@ -32,77 +36,126 @@ const Navbar = () => {
     }
   };
 
+  const closeMenu = () => setIsMenuOpen(false);
+
   return (
-    <nav className="bg-gray-900 text-white px-6 py-3 flex justify-between items-center">
-      {/* Brand + Public Navigation */}
-      <div className="flex items-center space-x-6">
-        <Link
-          to={getHomePath()}
-          className="text-xl font-bold"
-        >
-          ProcureHub
-        </Link>
+    <nav className="relative z-50 bg-gray-900 text-white px-4 sm:px-6 py-3">
+      <div className="flex min-h-10 items-center justify-between gap-4">
+        <div className="flex min-w-0 items-center">
+          <Link
+            to={getHomePath()}
+            onClick={closeMenu}
+            className="shrink-0 text-xl font-bold"
+          >
+            ProcureHub
+          </Link>
 
-        {/* Only show public navigation when logged out */}
-        {!user && (
-          <>
-            <Link
-              to="/about"
-              className="hover:underline"
-            >
-              About
-            </Link>
-
-            <Link
-              to="/contact"
-              className="hover:underline"
-            >
-              Contact
-            </Link>
-          </>
-        )}
-      </div>
-
-      {/* Authentication / User Information */}
-      <div className="flex items-center gap-5">
-        {!user ? (
-          <>
-            <Link
-              to="/login"
-              className="hover:underline"
-            >
-              Login
-            </Link>
-
-            <Link
-              to="/register"
-              className="hover:underline"
-            >
-              Register
-            </Link>
-          </>
-        ) : (
-          <>
-            {/* Current Logged-in User */}
-            <div className="text-right">
-              <p className="font-semibold">
-                {user.name || "User"}
-              </p>
-
-              <p className="text-xs text-gray-400">
-                {getRoleLabel(user.role)}
-              </p>
+          {!user && (
+            <div className="hidden items-center gap-6 pl-6 sm:flex">
+              <Link to="/about" className="hover:underline">
+                About
+              </Link>
+              <Link to="/contact" className="hover:underline">
+                Contact
+              </Link>
             </div>
+          )}
+        </div>
 
-            <button
-              onClick={handleLogout}
-              className="bg-red-500 hover:bg-red-600 px-3 py-2 rounded text-white"
-            >
-              Logout
-            </button>
-          </>
-        )}
+        <div className="hidden items-center gap-5 sm:flex">
+          {!user ? (
+            <>
+              <Link to="/login" className="hover:underline">
+                Login
+              </Link>
+              <Link to="/register" className="hover:underline">
+                Register
+              </Link>
+            </>
+          ) : (
+            <>
+              <div className="text-right">
+                <p className="font-semibold leading-tight">
+                  {user.name || "User"}
+                </p>
+                <p className="text-xs text-gray-400">
+                  {getRoleLabel(user.role)}
+                </p>
+              </div>
+              <button
+                onClick={handleLogout}
+                className="rounded bg-red-500 px-3 py-2 text-white hover:bg-red-600"
+              >
+                Logout
+              </button>
+            </>
+          )}
+        </div>
+
+        <button
+          type="button"
+          aria-label={isMenuOpen ? "Close navigation menu" : "Open navigation menu"}
+          aria-expanded={isMenuOpen}
+          onClick={() => setIsMenuOpen((open) => !open)}
+          className="rounded p-2 hover:bg-gray-800 sm:hidden"
+        >
+          {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
+        </button>
       </div>
+
+      {isMenuOpen && (
+        <div className="border-t border-gray-700 pb-2 pt-3 sm:hidden">
+          <div className="flex flex-col gap-1">
+            {!user ? (
+              <>
+                <Link
+                  to="/about"
+                  onClick={closeMenu}
+                  className="rounded px-3 py-3 hover:bg-gray-800"
+                >
+                  About
+                </Link>
+                <Link
+                  to="/contact"
+                  onClick={closeMenu}
+                  className="rounded px-3 py-3 hover:bg-gray-800"
+                >
+                  Contact
+                </Link>
+                <Link
+                  to="/login"
+                  onClick={closeMenu}
+                  className="rounded px-3 py-3 hover:bg-gray-800"
+                >
+                  Login
+                </Link>
+                <Link
+                  to="/register"
+                  onClick={closeMenu}
+                  className="rounded px-3 py-3 hover:bg-gray-800"
+                >
+                  Register
+                </Link>
+              </>
+            ) : (
+              <>
+                <div className="border-b border-gray-700 px-3 py-3">
+                  <p className="font-semibold">{user.name || "User"}</p>
+                  <p className="text-sm text-gray-400">
+                    {getRoleLabel(user.role)}
+                  </p>
+                </div>
+                <button
+                  onClick={handleLogout}
+                  className="mt-2 w-full rounded bg-red-500 px-3 py-3 text-left font-medium hover:bg-red-600"
+                >
+                  Logout
+                </button>
+              </>
+            )}
+          </div>
+        </div>
+      )}
     </nav>
   );
 };
