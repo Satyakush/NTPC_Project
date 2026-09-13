@@ -57,17 +57,17 @@ const Register = () => {
 
   if (success) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-white">
+      <div className="min-h-screen flex flex-col items-center justify-center bg-white px-4">
         <Player
           autoplay
           loop
           src={successAnimation}
-          style={{ height: "300px" }}
+          style={{ height: "240px", maxWidth: "100%" }}
         />
-        <h2 className="text-2xl font-bold text-green-600 mt-4">
+        <h2 className="text-xl sm:text-2xl font-bold text-green-600 mt-4 text-center">
           Registration Successful!
         </h2>
-        <p className="text-gray-600 text-center mt-2 px-4">
+        <p className="text-gray-600 text-center mt-2 px-2 text-sm sm:text-base">
           Please wait for the cooperative to approve your account.
         </p>
       </div>
@@ -76,16 +76,16 @@ const Register = () => {
 
   return (
     <div
-      className="min-h-screen flex items-center justify-center bg-cover bg-center"
+      className="min-h-screen flex items-center justify-center bg-cover bg-center px-4 py-6 sm:px-6 sm:py-8"
       style={{ backgroundImage: `url(${bgImage})` }}
     >
       <motion.div
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ duration: 0.5 }}
-        className="bg-white/80 backdrop-blur-lg p-8 rounded-2xl shadow-2xl w-full max-w-lg"
+        className="bg-white/80 backdrop-blur-lg p-5 sm:p-8 rounded-2xl shadow-2xl w-full max-w-lg"
       >
-        <h2 className="text-3xl font-bold text-center mb-6 text-gray-800">
+        <h2 className="text-2xl sm:text-3xl font-bold text-center mb-5 sm:mb-6 text-gray-800">
           Register
         </h2>
 
@@ -97,7 +97,7 @@ const Register = () => {
             <input
               type="text"
               placeholder="Full Name"
-              className="w-full border px-3 py-2 rounded"
+              className="w-full border px-3 py-2 rounded text-base"
               value={form.name}
               onChange={(e) => setForm({ ...form, name: e.target.value })}
               required
@@ -111,7 +111,7 @@ const Register = () => {
             <input
               type="email"
               placeholder="Email"
-              className="w-full border px-3 py-2 rounded"
+              className="w-full border px-3 py-2 rounded text-base"
               value={form.email}
               onChange={(e) => setForm({ ...form, email: e.target.value })}
               required
@@ -125,7 +125,7 @@ const Register = () => {
             <input
               type="password"
               placeholder="Password"
-              className="w-full border px-3 py-2 rounded"
+              className="w-full border px-3 py-2 rounded text-base"
               value={form.password}
               onChange={(e) => setForm({ ...form, password: e.target.value })}
               required
@@ -137,7 +137,7 @@ const Register = () => {
               Role
             </label>
             <select
-              className="w-full border px-3 py-2 rounded"
+              className="w-full border px-3 py-2 rounded text-base"
               value={form.role}
               onChange={(e) => setForm({ ...form, role: e.target.value })}
             >
@@ -155,7 +155,7 @@ const Register = () => {
                 <input
                   type="text"
                   placeholder="Organization Name"
-                  className="w-full border px-3 py-2 rounded"
+                  className="w-full border px-3 py-2 rounded text-base"
                   value={form.organization}
                   onChange={(e) =>
                     setForm({ ...form, organization: e.target.value })
@@ -171,7 +171,7 @@ const Register = () => {
                 <input
                   type="text"
                   placeholder="GSTIN"
-                  className="w-full border px-3 py-2 rounded"
+                  className="w-full border px-3 py-2 rounded text-base"
                   value={form.gstin}
                   onChange={(e) => setForm({ ...form, gstin: e.target.value })}
                   required
@@ -183,11 +183,11 @@ const Register = () => {
                   Vendor Items
                 </label>
                 {form.vendorItems.map((item, idx) => (
-                  <div key={idx} className="flex gap-2 mt-2">
+                  <div key={idx} className="flex flex-col sm:flex-row gap-2 mt-2">
                     <input
                       type="text"
                       placeholder="Item Name"
-                      className="w-1/2 border px-2 py-1 rounded"
+                      className="w-full sm:w-1/2 border px-2 py-2 rounded text-base"
                       value={item.name}
                       onChange={(e) =>
                         handleItemChange(idx, "name", e.target.value)
@@ -196,7 +196,7 @@ const Register = () => {
                     <input
                       type="text"
                       placeholder="Description"
-                      className="w-1/2 border px-2 py-1 rounded"
+                      className="w-full sm:w-1/2 border px-2 py-2 rounded text-base"
                       value={item.description}
                       onChange={(e) =>
                         handleItemChange(idx, "description", e.target.value)
@@ -222,7 +222,7 @@ const Register = () => {
             <textarea
               placeholder="Note for admin (optional)"
               rows={3}
-              className="w-full border px-3 py-2 rounded"
+              className="w-full border px-3 py-2 rounded text-base"
               value={form.note}
               onChange={(e) => setForm({ ...form, note: e.target.value })}
             />
@@ -231,7 +231,7 @@ const Register = () => {
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-green-600 hover:bg-green-700 text-white py-2 rounded font-semibold flex items-center justify-center gap-2 transition"
+            className="w-full bg-green-600 hover:bg-green-700 text-white py-2.5 rounded font-semibold flex items-center justify-center gap-2 transition"
           >
             {loading && (
               <span className="h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
