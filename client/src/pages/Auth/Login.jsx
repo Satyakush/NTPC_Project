@@ -35,9 +35,9 @@ const Login = () => {
 
   if (success) {
     return (
-      <div className="min-h-screen flex flex-col justify-center items-center bg-white">
-        <Player autoplay loop src={successAnimation} style={{ height: 300 }} />
-        <h2 className="text-2xl font-bold text-green-600 mt-4">
+      <div className="min-h-screen flex flex-col justify-center items-center bg-white px-4">
+        <Player autoplay loop src={successAnimation} style={{ height: 300, maxWidth: "100%" }} />
+        <h2 className="text-xl sm:text-2xl font-bold text-green-600 mt-4 text-center">
           Login Successful!
         </h2>
       </div>
@@ -46,7 +46,7 @@ const Login = () => {
 
   return (
     <div
-      className="min-h-screen flex items-center justify-center bg-cover bg-center relative"
+      className="min-h-screen flex items-center justify-center bg-cover bg-center relative px-4 py-6 sm:px-6 sm:py-8"
       style={{ backgroundImage: `url(${bgImage})` }}
     >
       <div className="absolute inset-0 bg-black/40 backdrop-blur-sm z-0" />
@@ -55,13 +55,13 @@ const Login = () => {
         initial={{ opacity: 0, scale: 0.9 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ duration: 0.6 }}
-        className="z-10 bg-white/80 backdrop-blur-md p-8 rounded-2xl shadow-xl w-full max-w-md"
+        className="z-10 bg-white/80 backdrop-blur-md p-5 sm:p-8 rounded-2xl shadow-xl w-full max-w-md"
       >
-        <h2 className="text-3xl font-bold mb-6 text-center text-gray-800">
+        <h2 className="text-2xl sm:text-3xl font-bold mb-5 sm:mb-6 text-center text-gray-800">
           Login
         </h2>
 
-        {error && <p className="text-red-600 text-center mb-4">{error}</p>}
+        {error && <p className="text-red-600 text-center mb-4 text-sm sm:text-base">{error}</p>}
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
@@ -71,7 +71,7 @@ const Login = () => {
             <input
               type="email"
               placeholder="Email"
-              className="w-full border px-3 py-2 rounded"
+              className="w-full border px-3 py-2 rounded text-base"
               value={form.email}
               onChange={(e) => setForm({ ...form, email: e.target.value })}
               required
@@ -85,7 +85,7 @@ const Login = () => {
             <input
               type="password"
               placeholder="Password"
-              className="w-full border px-3 py-2 rounded"
+              className="w-full border px-3 py-2 rounded text-base"
               value={form.password}
               onChange={(e) => setForm({ ...form, password: e.target.value })}
               required
@@ -95,7 +95,7 @@ const Login = () => {
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded font-semibold transition-all flex justify-center"
+            className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2.5 rounded font-semibold transition-all flex justify-center"
           >
             {loading ? (
               <span className="h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
