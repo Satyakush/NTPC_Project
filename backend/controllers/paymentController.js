@@ -88,12 +88,13 @@ exports.verifyPayment = async (req, res) => {
       .update(`${razorpayOrderId}|${razorpayPaymentId}`)
       .digest("hex");
 
-    const signaturesMatch = crypto.timingSafeEqual(
-      Buffer.from(expectedSignature),
-      Buffer.from(razorpaySignature)
-    );
-
-    if (!signaturesMatch) {
+    if (
+      expectedSignature.length !== razorpaySignature.length ||
+      !crypto.timingSafeEqual(
+        Buffer.from(expectedSignature),
+        Buffer.from(razorpaySignature)
+      )
+    ) {
       bill.paymentStatus = "failed";
       bill.paymentFailureReason = "Payment signature verification failed";
       await bill.save();
