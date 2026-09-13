@@ -1,49 +1,46 @@
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Moon, Sun, ArrowDown } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import video from "../../assets/login_video.mp4";
 
 const Home = () => {
-  const [darkMode, setDarkMode] = useState(true);
+  const [darkMode, setDarkMode] = useState(() => {
+    const savedMode = localStorage.getItem("procurehub-theme");
+    return savedMode ? savedMode === "dark" : true;
+  });
+
+  useEffect(() => {
+    localStorage.setItem("procurehub-theme", darkMode ? "dark" : "light");
+  }, [darkMode]);
 
   return (
-    <div className={darkMode ? "text-white" : "text-gray-900"}>
-
-      {/* ================= FIRST SECTION ================= */}
+    <div className={darkMode ? "bg-gray-950 text-white transition-colors duration-300" : "bg-gray-50 text-gray-900 transition-colors duration-300"}>
       <section className="relative min-h-screen overflow-hidden">
-
-        {/* Background Video */}
         <video
           autoPlay
           loop
           muted
           playsInline
-          className="absolute inset-0 w-full h-full object-cover"
+          className={`absolute inset-0 h-full w-full object-cover transition-opacity duration-500 ${darkMode ? "opacity-100" : "opacity-20"}`}
         >
           <source src={video} type="video/mp4" />
         </video>
 
-        {/* Dark Overlay */}
-        <div className="absolute inset-0 bg-black/60" />
+        <div className={`absolute inset-0 transition-colors duration-500 ${darkMode ? "bg-black/60" : "bg-white/70"}`} />
 
-        {/* Dark Mode Button */}
         <button
+          type="button"
+          aria-label={darkMode ? "Switch to light mode" : "Switch to dark mode"}
           onClick={() => setDarkMode((prev) => !prev)}
-          className="absolute top-5 right-5 z-30 bg-black/50 text-white rounded-full p-2 backdrop-blur hover:scale-105 transition"
+          className={`absolute right-5 top-5 z-30 rounded-full p-2 backdrop-blur transition-all duration-300 hover:scale-105 ${darkMode ? "bg-black/50 text-white hover:bg-black/70" : "bg-white/80 text-gray-800 shadow-md hover:bg-white"}`}
         >
-          {darkMode ? (
-            <Sun className="w-5 h-5" />
-          ) : (
-            <Moon className="w-5 h-5" />
-          )}
+          {darkMode ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
         </button>
 
-        {/* Hero Content */}
-        <div className="relative z-10 min-h-screen flex flex-col items-center justify-center px-6 text-center">
-
+        <div className="relative z-10 flex min-h-screen flex-col items-center justify-center px-6 text-center">
           <motion.h1
-            className="text-5xl font-extrabold mb-4 tracking-tight text-white"
+            className={`mb-4 text-5xl font-extrabold tracking-tight transition-colors duration-300 ${darkMode ? "text-white" : "text-gray-900"}`}
             initial={{ opacity: 0, y: -40 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 1.2 }}
@@ -52,7 +49,7 @@ const Home = () => {
           </motion.h1>
 
           <motion.p
-            className="text-xl max-w-xl mb-8 text-white/90"
+            className={`mb-8 max-w-xl text-xl transition-colors duration-300 ${darkMode ? "text-white/90" : "text-gray-700"}`}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 1.4, delay: 0.3 }}
@@ -69,52 +66,43 @@ const Home = () => {
           >
             <Link
               to="/register"
-              className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-xl shadow-md transition"
+              className="rounded-xl bg-blue-600 px-6 py-3 text-white shadow-md transition hover:bg-blue-700"
             >
               Get Started
             </Link>
 
             <Link
               to="/about"
-              className="bg-white/20 border border-white/30 px-6 py-3 rounded-xl backdrop-blur-sm text-white transition"
+              className={`rounded-xl border px-6 py-3 backdrop-blur-sm transition ${darkMode ? "border-white/30 bg-white/20 text-white hover:bg-white/30" : "border-gray-300 bg-white/80 text-gray-800 hover:bg-white"}`}
             >
               Learn More
             </Link>
           </motion.div>
 
-          {/* Scroll Indicator */}
           <motion.div
             animate={{ y: [0, 10, 0] }}
             transition={{ repeat: Infinity, duration: 2 }}
-            className="absolute bottom-8 text-white/80"
+            className={`absolute bottom-8 transition-colors duration-300 ${darkMode ? "text-white/80" : "text-gray-700"}`}
           >
-            <ArrowDown className="w-8 h-8" />
+            <ArrowDown className="h-8 w-8" />
           </motion.div>
-
         </div>
       </section>
 
-
-      {/* ================= SECOND SECTION ================= */}
       <section className="relative min-h-screen overflow-hidden">
-
-        {/* Background Video Again */}
         <video
           autoPlay
           loop
           muted
           playsInline
-          className="absolute inset-0 w-full h-full object-cover"
+          className={`absolute inset-0 h-full w-full object-cover transition-opacity duration-500 ${darkMode ? "opacity-100" : "opacity-20"}`}
         >
           <source src={video} type="video/mp4" />
         </video>
 
-        {/* Dark Overlay */}
-        <div className="absolute inset-0 bg-black/60" />
+        <div className={`absolute inset-0 transition-colors duration-500 ${darkMode ? "bg-black/60" : "bg-white/70"}`} />
 
-        {/* Second Section Content */}
-        <div className="relative z-10 min-h-screen flex flex-col items-center justify-center px-6 text-center">
-
+        <div className="relative z-10 flex min-h-screen flex-col items-center justify-center px-6 text-center">
           <motion.div
             initial={{ opacity: 0, y: 40 }}
             whileInView={{ opacity: 1, y: 0 }}
@@ -122,22 +110,18 @@ const Home = () => {
             transition={{ duration: 1 }}
             className="max-w-3xl"
           >
-
-            <h2 className="text-4xl md:text-5xl font-bold mb-6 text-white">
+            <h2 className={`mb-6 text-4xl font-bold transition-colors duration-300 md:text-5xl ${darkMode ? "text-white" : "text-gray-900"}`}>
               Why ProcureHub?
             </h2>
 
-            <p className="text-lg md:text-xl leading-relaxed text-white/90">
+            <p className={`text-lg leading-relaxed transition-colors duration-300 md:text-xl ${darkMode ? "text-white/90" : "text-gray-700"}`}>
               Real-time request tracking, quote comparison, cooperative
               control — all in one streamlined solution. Designed for
               powerhouses like NTPC and beyond.
             </p>
-
           </motion.div>
-
         </div>
       </section>
-
     </div>
   );
 };
