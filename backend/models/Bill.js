@@ -23,10 +23,10 @@ const billSchema = new mongoose.Schema(
     },
 
     vendor: {
-  type: mongoose.Schema.Types.ObjectId,
-  ref: "User",
-  required: true,
-},
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+    },
 
     vendorAmount: {
       type: Number,
@@ -44,6 +44,50 @@ const billSchema = new mongoose.Schema(
       type: Number,
       required: true,
       min: 0,
+    },
+
+    paymentStatus: {
+      type: String,
+      enum: ["pending", "paid", "failed"],
+      default: "pending",
+      index: true,
+    },
+
+    paymentCurrency: {
+      type: String,
+      default: "INR",
+      uppercase: true,
+      trim: true,
+    },
+
+    razorpayOrderId: {
+      type: String,
+      default: null,
+      index: true,
+      sparse: true,
+    },
+
+    razorpayPaymentId: {
+      type: String,
+      default: null,
+      index: true,
+      sparse: true,
+    },
+
+    razorpaySignature: {
+      type: String,
+      default: null,
+    },
+
+    paidAt: {
+      type: Date,
+      default: null,
+    },
+
+    paymentFailureReason: {
+      type: String,
+      default: "",
+      trim: true,
     },
 
     note: {
