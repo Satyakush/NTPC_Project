@@ -13,8 +13,8 @@ const {
 
 const { protect } = require("../middleware/authMiddleware");
 const { isCooperative } = require("../middleware/roleMiddleware");
+const { canAccessRequest } = require("../middleware/requestAccessMiddleware");
 
-// Order matters: put specific routes before generic ones
 router.post("/", protect, createRequest);
 router.get("/mine", protect, getMyRequests);
 router.get("/vendor-items", protect, getVendorItems);
@@ -22,6 +22,6 @@ router.get("/all", protect, isCooperative, getAllRequests);
 router.get("/published", protect, getPublishedRequests);
 router.put("/publish/:id", protect, isCooperative, publishRequest);
 router.put("/finalize/:id", protect, isCooperative, finalizeRequest);
-router.get("/:id", protect, getRequestById);
+router.get("/:id", protect, canAccessRequest, getRequestById);
 
 module.exports = router;
