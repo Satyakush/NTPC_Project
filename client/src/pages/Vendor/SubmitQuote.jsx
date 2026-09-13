@@ -3,7 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import axios from "../../utils/api";
 
 const SubmitQuote = () => {
-  const { requestId } = useParams(); // Mongo _id from URL
+  const { requestId } = useParams();
   const navigate = useNavigate();
 
   const [quotes, setQuotes] = useState([]);
@@ -52,7 +52,7 @@ const SubmitQuote = () => {
         )
       );
       alert("✅ Quotes submitted successfully!");
-      navigate("/vendor/my-quotes");
+      navigate("/vendor/quotes");
     } catch (err) {
       console.error("❌ Error submitting quotes:", err);
       alert("Error submitting quotes. Try again.");
