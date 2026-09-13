@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Link } from "react-router-dom";
 import axios from "../../utils/api";
 import { motion } from "framer-motion";
 import { Player } from "@lottiefiles/react-lottie-player";
@@ -237,6 +238,16 @@ const Register = () => {
             )}
             {loading ? "Submitting..." : "Register"}
           </button>
+
+          <p className="text-center text-sm text-gray-600 pt-1">
+            Already have an account?{" "}
+            <Link
+              to="/login"
+              className="font-semibold text-green-600 hover:text-green-700 hover:underline"
+            >
+              Login here
+            </Link>
+          </p>
         </form>
       </motion.div>
     </div>
