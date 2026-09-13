@@ -9,6 +9,7 @@ exports.adminStats = async (req, res) => {
       totalRequests,
       totalQuotes,
       totalBills,
+      paidBills,
       pendingUsers,
       pendingRequests,
       pendingQuotes,
@@ -18,6 +19,7 @@ exports.adminStats = async (req, res) => {
       Request.countDocuments(),
       Quote.countDocuments(),
       Bill.countDocuments(),
+      Bill.countDocuments({ paymentStatus: "paid" }),
       User.countDocuments({ isApproved: false }),
       Request.countDocuments({ status: "pending" }),
       Quote.countDocuments({ status: "pending" }),
@@ -29,19 +31,16 @@ exports.adminStats = async (req, res) => {
         .lean(),
     ]);
 
-    // Total money generated through completed bills
     const totalProcurementValue = bills.reduce(
       (sum, bill) => sum + (bill.customerTotal || 0),
       0
     );
 
-    // Total cooperative commission
     const totalCommission = bills.reduce(
       (sum, bill) => sum + (bill.commission || 0),
       0
     );
 
-    // Group quotes by request
     const quotes = await Quote.find().lean();
 
     const quotesByRequest = {};
@@ -63,7 +62,6 @@ exports.adminStats = async (req, res) => {
       }
     }
 
-    // Group bills by request
     const billsByRequest = {};
 
     for (const bill of bills) {
@@ -72,6 +70,7 @@ exports.adminStats = async (req, res) => {
       if (!billsByRequest[requestId]) {
         billsByRequest[requestId] = {
           count: 0,
+          paidCount: 0,
           vendors: [],
           customerTotal: 0,
           commission: 0,
@@ -79,6 +78,10 @@ exports.adminStats = async (req, res) => {
       }
 
       billsByRequest[requestId].count++;
+
+      if (bill.paymentStatus === "paid") {
+        billsByRequest[requestId].paidCount++;
+      }
 
       if (bill.vendor) {
         billsByRequest[requestId].vendors.push({
@@ -88,14 +91,10 @@ exports.adminStats = async (req, res) => {
         });
       }
 
-      billsByRequest[requestId].customerTotal +=
-        bill.customerTotal || 0;
-
-      billsByRequest[requestId].commission +=
-        bill.commission || 0;
+      billsByRequest[requestId].customerTotal += bill.customerTotal || 0;
+      billsByRequest[requestId].commission += bill.commission || 0;
     }
 
-    // Build request tracking data
     const requestTracking = requests.map((request) => {
       const requestKey = request._id.toString();
 
@@ -106,39 +105,34 @@ exports.adminStats = async (req, res) => {
 
       const billData = billsByRequest[requestKey] || {
         count: 0,
+        paidCount: 0,
         vendors: [],
         customerTotal: 0,
         commission: 0,
       };
 
-      // Remove duplicate vendors
       const uniqueVendors = Array.from(
         new Map(
-          billData.vendors.map((vendor) => [
-            vendor.id.toString(),
-            vendor,
-          ])
+          billData.vendors.map((vendor) => [vendor.id.toString(), vendor])
         ).values()
       );
+
+      const billsPaid = billData.count > 0 && billData.paidCount === billData.count;
 
       return {
         _id: request._id,
         requestId: request.requestId,
         customer: request.customer,
         status: request.status,
-
         items: request.items?.length || 0,
-
         quotesReceived: quoteData.received,
         quotesApproved: quoteData.approved,
-
         billsGenerated: billData.count,
-
+        billsPaid: billData.paidCount,
+        billsPaymentComplete: billsPaid,
         vendorsInvolved: uniqueVendors,
-
         customerTotal: billData.customerTotal,
         commission: billData.commission,
-
         createdAt: request.createdAt,
       };
     });
@@ -148,20 +142,19 @@ exports.adminStats = async (req, res) => {
         totalRequests,
         totalQuotes,
         totalBills,
+        paidBills,
         totalProcurementValue,
         totalCommission,
       },
-
       pendingActions: {
         requestsToPublish: pendingRequests,
         quotesToApprove: pendingQuotes,
         usersToApprove: pendingUsers,
       },
-
       requestTracking,
     });
   } catch (err) {
-    console.error("❌ Error loading admin dashboard:", err);
+    console.error("Error loading admin dashboard:", err);
 
     res.status(500).json({
       message: "Error loading dashboard data",
