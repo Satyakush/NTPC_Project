@@ -2,6 +2,19 @@ const crypto = require("crypto");
 const Bill = require("../models/Bill");
 const getRazorpay = require("../config/razorpay");
 
+const markBillPaid = async (bill, paymentId = null, signature = null) => {
+  bill.paymentStatus = "paid";
+  if (paymentId) {
+    bill.razorpayPaymentId = paymentId;
+  }
+  if (signature) {
+    bill.razorpaySignature = signature;
+  }
+  bill.paymentFailureReason = "";
+  bill.paidAt = bill.paidAt || new Date();
+  await bill.save();
+};
+
 exports.createPaymentOrder = async (req, res) => {
   try {
     const bill = await Bill.findOne({
@@ -23,12 +36,32 @@ exports.createPaymentOrder = async (req, res) => {
     if (bill.razorpayOrderId) {
       try {
         order = await razorpay.orders.fetch(bill.razorpayOrderId);
+
+        if (order.status === "paid") {
+          const payments = await razorpay.orders.fetchPayments(bill.razorpayOrderId);
+          const capturedPayment = payments.items?.find(
+            (payment) =>
+              payment.status === "captured" &&
+              payment.amount === Math.round(bill.customerTotal * 100) &&
+              payment.currency === bill.paymentCurrency
+          );
+
+          if (capturedPayment) {
+            await markBillPaid(bill, capturedPayment.id);
+            return res.json({
+              message: "Payment already completed",
+              paid: true,
+              billId: bill._id,
+            });
+          }
+        }
       } catch (error) {
         bill.razorpayOrderId = null;
+        await bill.save();
       }
     }
 
-    if (!order) {
+    if (!order || order.status === "paid") {
       order = await razorpay.orders.create({
         amount: Math.round(bill.customerTotal * 100),
         currency: bill.paymentCurrency,
@@ -88,25 +121,34 @@ exports.verifyPayment = async (req, res) => {
       .update(`${razorpayOrderId}|${razorpayPaymentId}`)
       .digest("hex");
 
-    if (
-      expectedSignature.length !== razorpaySignature.length ||
-      !crypto.timingSafeEqual(
-        Buffer.from(expectedSignature),
-        Buffer.from(razorpaySignature)
-      )
-    ) {
+    const expectedBuffer = Buffer.from(expectedSignature);
+    const receivedBuffer = Buffer.from(razorpaySignature);
+    const signaturesMatch =
+      expectedBuffer.length === receivedBuffer.length &&
+      crypto.timingSafeEqual(expectedBuffer, receivedBuffer);
+
+    if (!signaturesMatch) {
       bill.paymentStatus = "failed";
       bill.paymentFailureReason = "Payment signature verification failed";
       await bill.save();
       return res.status(400).json({ message: "Payment verification failed" });
     }
 
-    bill.paymentStatus = "paid";
-    bill.razorpayPaymentId = razorpayPaymentId;
-    bill.razorpaySignature = razorpaySignature;
-    bill.paymentFailureReason = "";
-    bill.paidAt = new Date();
-    await bill.save();
+    const razorpay = getRazorpay();
+    const payment = await razorpay.payments.fetch(razorpayPaymentId);
+
+    if (
+      payment.order_id !== bill.razorpayOrderId ||
+      payment.amount !== Math.round(bill.customerTotal * 100) ||
+      payment.currency !== bill.paymentCurrency ||
+      payment.status !== "captured"
+    ) {
+      return res.status(400).json({
+        message: "Payment could not be confirmed as captured",
+      });
+    }
+
+    await markBillPaid(bill, razorpayPaymentId, razorpaySignature);
 
     return res.json({
       message: "Payment verified successfully",
