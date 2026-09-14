@@ -61,6 +61,8 @@ const processCapturedPayment = async (payment) => {
 };
 
 exports.handleRazorpayWebhook = async (req, res) => {
+  let paymentEvent = null;
+
   try {
     const signature = req.headers["x-razorpay-signature"];
     const eventId = req.headers["x-razorpay-event-id"];
@@ -88,16 +90,30 @@ exports.handleRazorpayWebhook = async (req, res) => {
     const event = JSON.parse(req.body.toString("utf8"));
 
     if (eventId) {
-      try {
-        await PaymentEvent.create({
-          eventId,
-          event: event.event || "unknown",
-        });
-      } catch (error) {
-        if (error.code === 11000) {
-          return res.json({ received: true, duplicate: true });
+      paymentEvent = await PaymentEvent.findOne({ eventId });
+
+      if (paymentEvent?.status === "processed") {
+        return res.json({ received: true, duplicate: true });
+      }
+
+      if (!paymentEvent) {
+        try {
+          paymentEvent = await PaymentEvent.create({
+            eventId,
+            event: event.event || "unknown",
+            status: "pending",
+          });
+        } catch (error) {
+          if (error.code === 11000) {
+            paymentEvent = await PaymentEvent.findOne({ eventId });
+
+            if (paymentEvent?.status === "processed") {
+              return res.json({ received: true, duplicate: true });
+            }
+          } else {
+            throw error;
+          }
         }
-        throw error;
       }
     }
 
@@ -125,8 +141,23 @@ exports.handleRazorpayWebhook = async (req, res) => {
       }
     }
 
+    if (paymentEvent) {
+      paymentEvent.status = "processed";
+      paymentEvent.processedAt = new Date();
+      paymentEvent.error = "";
+      await paymentEvent.save();
+    }
+
     return res.json({ received: true });
   } catch (error) {
+    if (paymentEvent) {
+      try {
+        paymentEvent.status = "failed";
+        paymentEvent.error = error.message;
+        await paymentEvent.save();
+      } catch {}
+    }
+
     console.error("Error handling Razorpay webhook:", error.message);
     return res.status(500).json({ message: "Webhook processing failed" });
   }
