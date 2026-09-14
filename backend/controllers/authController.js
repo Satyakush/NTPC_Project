@@ -4,7 +4,6 @@ const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const transporter = require("../config/mailer");
 
-// Register New User
 exports.register = async (req, res) => {
   const {
     name,
@@ -18,10 +17,10 @@ exports.register = async (req, res) => {
   } = req.body;
 
   if (!["customer", "vendor"].includes(role)) {
-  return res.status(400).json({
-    message: "Only customer and vendor registration is allowed.",
-  });
-}
+    return res.status(400).json({
+      message: "Only customer and vendor registration is allowed.",
+    });
+  }
 
   try {
     const existing = await User.findOne({ email });
@@ -84,7 +83,6 @@ exports.register = async (req, res) => {
   }
 };
 
-// Login
 exports.login = async (req, res) => {
   const { email, password } = req.body;
   try {
@@ -94,8 +92,9 @@ exports.login = async (req, res) => {
     }
 
     const isValid = await bcrypt.compare(password, user.password);
-    if (!isValid)
+    if (!isValid) {
       return res.status(401).json({ message: "Invalid credentials" });
+    }
 
     const token = jwt.sign(
       { id: user._id, role: user.role },
@@ -112,7 +111,6 @@ exports.login = async (req, res) => {
   }
 };
 
-// ✅ Get All Pending Users (with Vendor Items)
 exports.getPendingUsers = async (req, res) => {
   try {
     const users = await User.find({ isApproved: false }).lean();
@@ -134,17 +132,26 @@ exports.getPendingUsers = async (req, res) => {
   }
 };
 
-// Approve User
 exports.approveUser = async (req, res) => {
   const { userId } = req.params;
   try {
-    const user = await User.findByIdAndUpdate(
-      userId,
-      { isApproved: true },
+    const user = await User.findOneAndUpdate(
+      { _id: userId, isApproved: false },
+      { $set: { isApproved: true } },
       { new: true }
     );
 
-    if (!user) return res.status(404).json({ message: "User not found" });
+    if (!user) {
+      const existingUser = await User.findById(userId);
+
+      if (!existingUser) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      return res.status(409).json({
+        message: "This user is already approved.",
+      });
+    }
 
     await transporter.sendMail({
       to: user.email,
@@ -161,14 +168,13 @@ exports.approveUser = async (req, res) => {
   }
 };
 
-// Reject User
 exports.rejectUser = async (req, res) => {
   const { userId } = req.params;
   try {
     const user = await User.findByIdAndDelete(userId);
     if (!user) return res.status(404).json({ message: "User not found" });
 
-    await VendorItem.deleteMany({ vendor: user._id }); // 🧹 cleanup vendor items
+    await VendorItem.deleteMany({ vendor: user._id });
 
     await transporter.sendMail({
       to: user.email,
