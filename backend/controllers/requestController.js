@@ -128,22 +128,28 @@ exports.publishRequest = async (req, res) => {
       });
     }
 
-    const request = await Request.findById(req.params.id);
+    const request = await Request.findOneAndUpdate(
+      {
+        _id: req.params.id,
+        status: { $in: ["draft", "pending"] },
+      },
+      { $set: { status: "published" } },
+      { new: true }
+    );
 
     if (!request) {
-      return res.status(404).json({
-        message: "Request not found",
+      const existingRequest = await Request.findById(req.params.id);
+
+      if (!existingRequest) {
+        return res.status(404).json({
+          message: "Request not found",
+        });
+      }
+
+      return res.status(409).json({
+        message: `Request cannot be published from '${existingRequest.status}' status`,
       });
     }
-
-    if (!["draft", "pending"].includes(request.status)) {
-      return res.status(400).json({
-        message: `Request cannot be published from '${request.status}' status`,
-      });
-    }
-
-    request.status = "published";
-    await request.save();
 
     await request.populate("customer");
 
