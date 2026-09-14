@@ -1,14 +1,22 @@
-import { useState, useEffect } from "react";
+import { useEffect, useRef, useState } from "react";
 import axios from "../../utils/api";
 import { motion } from "framer-motion";
+
+const createSubmissionKey = () =>
+  window.crypto?.randomUUID?.() || `${Date.now()}-${Math.random()}`;
 
 const CreateRequest = () => {
   const [items, setItems] = useState([{ name: "", quantity: 1 }]);
   const [suggestions, setSuggestions] = useState([]);
   const [remarks, setRemarks] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const submissionKeyRef = useRef(createSubmissionKey());
 
   useEffect(() => {
-    axios.get("/requests/vendor-items").then((res) => setSuggestions(res.data));
+    axios
+      .get("/requests/vendor-items")
+      .then((res) => setSuggestions(res.data))
+      .catch((err) => console.error("Failed to load item suggestions:", err));
   }, []);
 
   const handleChange = (i, field, value) => {
@@ -23,14 +31,27 @@ const CreateRequest = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    if (submitting) return;
+
+    setSubmitting(true);
+
     try {
-      await axios.post("/requests", { items, remarks, isDraft: false });
+      await axios.post(
+        "/requests",
+        { items, remarks, isDraft: false },
+        { headers: { "Idempotency-Key": submissionKeyRef.current } }
+      );
+
       alert("✅ Request submitted!");
       setItems([{ name: "", quantity: 1 }]);
       setRemarks("");
+      submissionKeyRef.current = createSubmissionKey();
     } catch (err) {
       console.error("Submit error:", err);
-      alert("❌ Failed to submit request.");
+      alert(err.response?.data?.message || "❌ Failed to submit request.");
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -62,9 +83,7 @@ const CreateRequest = () => {
                         list="vendorItems"
                         className="w-full border rounded p-1"
                         value={item.name}
-                        onChange={(e) =>
-                          handleChange(i, "name", e.target.value)
-                        }
+                        onChange={(e) => handleChange(i, "name", e.target.value)}
                         required
                       />
                     </td>
@@ -95,7 +114,8 @@ const CreateRequest = () => {
           <button
             type="button"
             onClick={addItem}
-            className="bg-blue-100 hover:bg-blue-200 text-blue-800 px-4 py-1 rounded mb-4"
+            disabled={submitting}
+            className="bg-blue-100 hover:bg-blue-200 text-blue-800 px-4 py-1 rounded mb-4 disabled:opacity-50"
           >
             + Add Row
           </button>
@@ -105,13 +125,15 @@ const CreateRequest = () => {
             placeholder="Additional remarks..."
             value={remarks}
             onChange={(e) => setRemarks(e.target.value)}
+            disabled={submitting}
           />
 
           <button
             type="submit"
-            className="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700"
+            disabled={submitting}
+            className="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
           >
-            Submit Request
+            {submitting ? "Submitting..." : "Submit Request"}
           </button>
         </form>
       </motion.div>
