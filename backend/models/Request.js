@@ -18,6 +18,12 @@ const requestSchema = new mongoose.Schema(
       required: true,
       unique: true,
     },
+    idempotencyKey: {
+      type: String,
+      unique: true,
+      sparse: true,
+      index: true,
+    },
     customer: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
