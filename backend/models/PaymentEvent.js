@@ -13,9 +13,20 @@ const paymentEventSchema = new mongoose.Schema(
       required: true,
       trim: true,
     },
+    status: {
+      type: String,
+      enum: ["pending", "processed", "failed"],
+      default: "pending",
+      index: true,
+    },
     processedAt: {
       type: Date,
-      default: Date.now,
+      default: null,
+    },
+    error: {
+      type: String,
+      default: "",
+      trim: true,
     },
   },
   { timestamps: true }
