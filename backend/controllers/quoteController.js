@@ -1,3 +1,4 @@
+const mongoose = require("mongoose");
 const Quote = require("../models/Quote");
 const Request = require("../models/Request");
 const transporter = require("../config/mailer");
@@ -186,45 +187,61 @@ exports.getAllQuotes = async (req, res) => {
 };
 
 exports.approveQuote = async (req, res) => {
+  const session = await mongoose.startSession();
+
   try {
     const { id } = req.params;
 
-    const quote = await Quote.findById(id);
+    let approvedQuote = null;
 
-    if (!quote) {
-      return res.status(404).json({
-        message: "Quote not found.",
-      });
-    }
+    await session.withTransaction(async () => {
+      const quote = await Quote.findById(id).session(session);
 
-    if (quote.status === "approved") {
-      return res.status(409).json({
-        message: "This quote is already approved.",
-      });
-    }
-
-    await Quote.updateMany(
-      {
-        request: quote.request,
-        "item.name": quote.item.name,
-        status: "approved",
-        _id: { $ne: quote._id },
-      },
-      {
-        $set: { status: "rejected" },
+      if (!quote) {
+        const error = new Error("Quote not found.");
+        error.status = 404;
+        throw error;
       }
-    );
 
-    quote.status = "approved";
-    await quote.save();
+      if (quote.status === "approved") {
+        const error = new Error("This quote is already approved.");
+        error.status = 409;
+        throw error;
+      }
 
-    res.json(quote);
+      if (quote.status !== "pending") {
+        const error = new Error("Only pending quotes can be approved.");
+        error.status = 400;
+        throw error;
+      }
+
+      await Quote.updateMany(
+        {
+          request: quote.request,
+          "item.name": quote.item.name,
+          status: "approved",
+          _id: { $ne: quote._id },
+        },
+        {
+          $set: { status: "rejected" },
+        },
+        { session }
+      );
+
+      quote.status = "approved";
+      await quote.save({ session });
+      approvedQuote = quote;
+    });
+
+    res.json(approvedQuote);
   } catch (err) {
     console.error("❌ Error approving quote:", err);
 
-    res.status(500).json({
-      message: "Error approving quote.",
+    res.status(err.status || 500).json({
+      message: err.status ? err.message : "Error approving quote.",
     });
+  } finally {
+    await session.endSession();
   }
 };
 
