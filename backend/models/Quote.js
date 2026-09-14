@@ -8,8 +8,14 @@ const quoteSchema = new mongoose.Schema(
       required: true,
     },
     requestId: {
-      type: String, // Human-readable ID (e.g., 2025/2506/0002)
+      type: String,
       required: true,
+    },
+    submissionKey: {
+      type: String,
+      unique: true,
+      sparse: true,
+      index: true,
     },
     item: {
       name: { type: String, required: true },
