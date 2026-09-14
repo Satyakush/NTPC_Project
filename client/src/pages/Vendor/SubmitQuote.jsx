@@ -53,7 +53,7 @@ const SubmitQuote = () => {
 
     try {
       await Promise.all(
-        quotes.map((quote) =>
+        quotes.map((quote, index) =>
           axios.post(
             `/quotes/${encodeURIComponent(readableRequestId)}`,
             {
@@ -63,7 +63,7 @@ const SubmitQuote = () => {
             },
             {
               headers: {
-                "Idempotency-Key": `${submissionKeyRef.current}-${quote.itemId}`,
+                "Idempotency-Key": `${submissionKeyRef.current}-${index}`,
               },
             }
           )
