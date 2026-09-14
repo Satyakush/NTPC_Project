@@ -1,6 +1,9 @@
-import { useState, useEffect } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import axios from "../../utils/api";
+
+const createSubmissionKey = () =>
+  window.crypto?.randomUUID?.() || `${Date.now()}-${Math.random()}`;
 
 const SubmitQuote = () => {
   const { requestId } = useParams();
@@ -8,7 +11,9 @@ const SubmitQuote = () => {
 
   const [quotes, setQuotes] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
   const [readableRequestId, setReadableRequestId] = useState("");
+  const submissionKeyRef = useRef(createSubmissionKey());
 
   useEffect(() => {
     const fetchRequest = async () => {
@@ -41,21 +46,38 @@ const SubmitQuote = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    if (submitting) return;
+
+    setSubmitting(true);
+
     try {
       await Promise.all(
         quotes.map((quote) =>
-          axios.post(`/quotes/${encodeURIComponent(readableRequestId)}`, {
-            itemName: quote.itemName,
-            price: quote.price,
-            remark: quote.remark,
-          })
+          axios.post(
+            `/quotes/${encodeURIComponent(readableRequestId)}`,
+            {
+              itemName: quote.itemName,
+              price: quote.price,
+              remark: quote.remark,
+            },
+            {
+              headers: {
+                "Idempotency-Key": `${submissionKeyRef.current}-${quote.itemId}`,
+              },
+            }
+          )
         )
       );
+
       alert("✅ Quotes submitted successfully!");
+      submissionKeyRef.current = createSubmissionKey();
       navigate("/vendor/quotes");
     } catch (err) {
       console.error("❌ Error submitting quotes:", err);
-      alert("Error submitting quotes. Try again.");
+      alert(err.response?.data?.message || "Error submitting quotes. Try again.");
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -66,7 +88,7 @@ const SubmitQuote = () => {
       <h2 className="text-2xl font-bold mb-6 text-indigo-800">Submit Quote</h2>
       <form onSubmit={handleSubmit} className="space-y-6">
         {quotes.map((quote, index) => (
-          <div key={index} className="border p-4 rounded shadow bg-white">
+          <div key={quote.itemId || index} className="border p-4 rounded shadow bg-white">
             <p className="font-semibold mb-2">
               🛒 Item: <span className="text-gray-800">{quote.itemName}</span>
             </p>
@@ -80,6 +102,7 @@ const SubmitQuote = () => {
               placeholder="Enter price in INR"
               className="w-full border rounded px-3 py-2 mb-3 focus:outline-none focus:ring"
               required
+              disabled={submitting}
             />
             <label className="block mb-1 text-sm text-gray-600">
               Remark (optional)
@@ -89,14 +112,16 @@ const SubmitQuote = () => {
               onChange={(e) => handleChange(index, "remark", e.target.value)}
               placeholder="Any specific notes or delivery time..."
               className="w-full border rounded px-3 py-2 h-20 focus:outline-none focus:ring"
+              disabled={submitting}
             />
           </div>
         ))}
         <button
           type="submit"
-          className="bg-blue-600 text-white font-semibold px-6 py-2 rounded w-full hover:bg-blue-700 transition"
+          disabled={submitting}
+          className="bg-blue-600 text-white font-semibold px-6 py-2 rounded w-full hover:bg-blue-700 transition disabled:cursor-not-allowed disabled:opacity-60"
         >
-          📤 Submit All Quotes
+          {submitting ? "Submitting Quotes..." : "📤 Submit All Quotes"}
         </button>
       </form>
     </div>
