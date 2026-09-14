@@ -2,14 +2,62 @@ const crypto = require("crypto");
 const Bill = require("../models/Bill");
 const PaymentEvent = require("../models/PaymentEvent");
 
-const markBillPaid = async (bill, paymentId = null) => {
-  bill.paymentStatus = "paid";
+const getAmountPaid = (bill) => Math.max(0, Number(bill.amountPaid || 0));
+
+const markBillPayment = async (bill, amount, paymentId = null) => {
+  const total = Number(bill.customerTotal || 0);
+  const nextPaid = Math.min(total, getAmountPaid(bill) + Number(amount || 0));
+
+  bill.amountPaid = nextPaid;
+
   if (paymentId) {
     bill.razorpayPaymentId = paymentId;
+    if (!bill.razorpayPaymentIds.includes(paymentId)) {
+      bill.razorpayPaymentIds.push(paymentId);
+    }
   }
+
   bill.paymentFailureReason = "";
-  bill.paidAt = bill.paidAt || new Date();
+
+  if (nextPaid >= total) {
+    bill.paymentStatus = "paid";
+    bill.paidAt = bill.paidAt || new Date();
+  } else {
+    bill.paymentStatus = "pending";
+    bill.paidAt = null;
+  }
+
   await bill.save();
+};
+
+const processCapturedPayment = async (payment) => {
+  const orderId = payment?.order_id;
+
+  if (!orderId || payment?.status !== "captured") {
+    return;
+  }
+
+  const bill = await Bill.findOne({ razorpayOrderId: orderId });
+
+  if (!bill || payment.currency !== bill.paymentCurrency) {
+    return;
+  }
+
+  if (bill.razorpayPaymentIds.includes(payment.id)) {
+    return;
+  }
+
+  const paymentAmount = Number(payment.amount || 0) / 100;
+  const remainingAmount = Math.max(
+    0,
+    Number(bill.customerTotal || 0) - getAmountPaid(bill)
+  );
+
+  if (paymentAmount <= 0 || paymentAmount > remainingAmount) {
+    return;
+  }
+
+  await markBillPayment(bill, paymentAmount, payment.id);
 };
 
 exports.handleRazorpayWebhook = async (req, res) => {
@@ -54,40 +102,11 @@ exports.handleRazorpayWebhook = async (req, res) => {
     }
 
     if (event.event === "payment.captured") {
-      const payment = event.payload?.payment?.entity;
-      const orderId = payment?.order_id;
-
-      if (orderId && payment?.status === "captured") {
-        const bill = await Bill.findOne({ razorpayOrderId: orderId });
-
-        if (
-          bill &&
-          payment.amount === Math.round(bill.customerTotal * 100) &&
-          payment.currency === bill.paymentCurrency &&
-          bill.paymentStatus !== "paid"
-        ) {
-          await markBillPaid(bill, payment.id);
-        }
-      }
+      await processCapturedPayment(event.payload?.payment?.entity);
     }
 
     if (event.event === "order.paid") {
-      const order = event.payload?.order?.entity;
-      const payment = event.payload?.payment?.entity;
-      const orderId = order?.id;
-
-      if (orderId) {
-        const bill = await Bill.findOne({ razorpayOrderId: orderId });
-
-        if (
-          bill &&
-          (!order.amount || order.amount === Math.round(bill.customerTotal * 100)) &&
-          (!order.currency || order.currency === bill.paymentCurrency) &&
-          bill.paymentStatus !== "paid"
-        ) {
-          await markBillPaid(bill, payment?.id || null);
-        }
-      }
+      await processCapturedPayment(event.payload?.payment?.entity);
     }
 
     if (event.event === "payment.failed") {
