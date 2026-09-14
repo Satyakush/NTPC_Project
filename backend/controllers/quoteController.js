@@ -2,12 +2,18 @@ const Quote = require("../models/Quote");
 const Request = require("../models/Request");
 const transporter = require("../config/mailer");
 
-// Submit a quote for a request item
 exports.submitQuote = async (req, res) => {
   try {
     const { itemName, price, remark } = req.body;
     const { requestId } = req.params;
     const vendorId = req.user.id;
+    const submissionKey = req.headers["idempotency-key"]?.trim();
+
+    if (!submissionKey) {
+      return res.status(400).json({
+        message: "Missing quote submission key. Please try again.",
+      });
+    }
 
     if (!itemName || itemName.trim() === "") {
       return res.status(400).json({
@@ -29,6 +35,12 @@ exports.submitQuote = async (req, res) => {
       });
     }
 
+    const existingSubmission = await Quote.findOne({ submissionKey });
+
+    if (existingSubmission) {
+      return res.status(200).json(existingSubmission);
+    }
+
     const request = await Request.findOne({ requestId });
 
     if (!request) {
@@ -46,8 +58,7 @@ exports.submitQuote = async (req, res) => {
     const normalizedItemName = itemName.trim().toLowerCase();
 
     const requestItem = request.items.find(
-      (item) =>
-        item.name.trim().toLowerCase() === normalizedItemName
+      (item) => item.name.trim().toLowerCase() === normalizedItemName
     );
 
     if (!requestItem) {
@@ -68,17 +79,32 @@ exports.submitQuote = async (req, res) => {
       });
     }
 
-    const quote = await Quote.create({
-      request: request._id,
-      requestId: request.requestId,
-      item: {
-        name: requestItem.name,
-      },
-      price: numericPrice,
-      remark: remark?.trim() || "",
-      vendor: vendorId,
-      status: "pending",
-    });
+    let quote;
+
+    try {
+      quote = await Quote.create({
+        request: request._id,
+        requestId: request.requestId,
+        submissionKey,
+        item: {
+          name: requestItem.name,
+        },
+        price: numericPrice,
+        remark: remark?.trim() || "",
+        vendor: vendorId,
+        status: "pending",
+      });
+    } catch (err) {
+      if (err.code === 11000 && err.keyPattern?.submissionKey) {
+        const duplicateQuote = await Quote.findOne({ submissionKey });
+
+        if (duplicateQuote) {
+          return res.status(200).json(duplicateQuote);
+        }
+      }
+
+      throw err;
+    }
 
     await transporter.sendMail({
       to: process.env.COOP_EMAIL,
@@ -101,7 +127,6 @@ exports.submitQuote = async (req, res) => {
   }
 };
 
-// Get all quotes submitted by current vendor
 exports.getMyQuotes = async (req, res) => {
   try {
     const quotes = await Quote.find({ vendor: req.user.id })
@@ -118,8 +143,6 @@ exports.getMyQuotes = async (req, res) => {
   }
 };
 
-
-// Get all quotes received for the current customer
 exports.getReceivedQuotes = async (req, res) => {
   try {
     const requests = await Request.find({
@@ -145,8 +168,6 @@ exports.getReceivedQuotes = async (req, res) => {
   }
 };
 
-
-// Get all quotes for cooperative/admin
 exports.getAllQuotes = async (req, res) => {
   try {
     const quotes = await Quote.find()
@@ -164,8 +185,6 @@ exports.getAllQuotes = async (req, res) => {
   }
 };
 
-// Approve a quote
-// Approve a quote
 exports.approveQuote = async (req, res) => {
   try {
     const { id } = req.params;
@@ -184,8 +203,6 @@ exports.approveQuote = async (req, res) => {
       });
     }
 
-    // Reject any previously approved quote
-    // for the same request and same item.
     await Quote.updateMany(
       {
         request: quote.request,
@@ -211,8 +228,6 @@ exports.approveQuote = async (req, res) => {
   }
 };
 
-// Reject a quote
-// Reject a quote
 exports.rejectQuote = async (req, res) => {
   try {
     const { id } = req.params;
