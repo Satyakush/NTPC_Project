@@ -50,6 +50,10 @@ const VendorBills = () => {
         <div className="space-y-4">
           {bills.map((bill) => {
             const paymentStatus = bill.paymentStatus || "pending";
+            const totalAmount = Math.max(0, Number(bill.customerTotal || 0));
+            const amountPaid = Math.min(totalAmount, Math.max(0, Number(bill.amountPaid || 0)));
+            const amountRemaining = Math.max(0, totalAmount - amountPaid);
+            const paymentProgress = totalAmount > 0 ? Math.min(100, (amountPaid / totalAmount) * 100) : 0;
             const statusClasses = {
               paid: "bg-green-100 text-green-700",
               failed: "bg-red-100 text-red-700",
@@ -68,7 +72,7 @@ const VendorBills = () => {
                   </span>
                 </div>
 
-                <div className="space-y-2">
+                <div className="space-y-3">
                   <p>
                     <strong>Customer:</strong> {bill.customer?.name || "N/A"}
                   </p>
@@ -79,6 +83,41 @@ const VendorBills = () => {
                       ₹{Number(bill.vendorAmount || 0).toLocaleString("en-IN")}
                     </span>
                   </p>
+
+                  <div className="grid gap-3 sm:grid-cols-3">
+                    <div className="rounded-lg bg-blue-50 p-3">
+                      <p className="text-xs font-medium text-gray-500">Customer Total</p>
+                      <p className="mt-1 font-semibold text-gray-800">
+                        ₹{totalAmount.toLocaleString("en-IN")}
+                      </p>
+                    </div>
+                    <div className="rounded-lg bg-green-50 p-3">
+                      <p className="text-xs font-medium text-gray-500">Paid So Far</p>
+                      <p className="mt-1 font-semibold text-green-700">
+                        ₹{amountPaid.toLocaleString("en-IN")}
+                      </p>
+                    </div>
+                    <div className="rounded-lg bg-yellow-50 p-3">
+                      <p className="text-xs font-medium text-gray-500">Still Left</p>
+                      <p className="mt-1 font-semibold text-yellow-700">
+                        ₹{amountRemaining.toLocaleString("en-IN")}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div>
+                    <div className="mb-1 flex items-center justify-between text-xs text-gray-500">
+                      <span>Payment Progress</span>
+                      <span>{paymentProgress.toFixed(0)}%</span>
+                    </div>
+                    <div className="h-2 overflow-hidden rounded-full bg-gray-200">
+                      <div
+                        className="h-full rounded-full bg-green-500 transition-all"
+                        style={{ width: `${paymentProgress}%` }}
+                      />
+                    </div>
+                  </div>
+
                   <p className="text-sm text-gray-500">
                     <strong>Generated On:</strong> {bill.generatedAt ? new Date(bill.generatedAt).toLocaleDateString("en-IN") : "N/A"}
                   </p>
@@ -92,6 +131,12 @@ const VendorBills = () => {
                 {paymentStatus === "paid" && (
                   <div className="mt-4 rounded-lg bg-green-50 p-3 text-sm text-green-700">
                     Customer payment has been received successfully.
+                  </div>
+                )}
+
+                {paymentStatus === "pending" && amountPaid > 0 && (
+                  <div className="mt-4 rounded-lg bg-yellow-50 p-3 text-sm text-yellow-800">
+                    Customer has paid ₹{amountPaid.toLocaleString("en-IN")} so far. ₹{amountRemaining.toLocaleString("en-IN")} is still pending.
                   </div>
                 )}
 
