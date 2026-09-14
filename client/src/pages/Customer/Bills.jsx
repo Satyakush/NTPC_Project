@@ -52,6 +52,12 @@ const CustomerBills = () => {
 
       const { data } = await axios.post(`/payments/bills/${bill._id}/order`);
 
+      if (data.paid) {
+        setSuccess("Payment completed successfully.");
+        await fetchBills();
+        return;
+      }
+
       const options = {
         key: data.keyId,
         amount: data.amount,
@@ -61,13 +67,26 @@ const CustomerBills = () => {
         order_id: data.orderId,
         handler: async (response) => {
           try {
-            await axios.post(`/payments/bills/${bill._id}/verify`, {
-              razorpayOrderId: response.razorpay_order_id,
-              razorpayPaymentId: response.razorpay_payment_id,
-              razorpaySignature: response.razorpay_signature,
-            });
+            const verificationResponse = await axios.post(
+              `/payments/bills/${bill._id}/verify`,
+              {
+                razorpayOrderId: response.razorpay_order_id,
+                razorpayPaymentId: response.razorpay_payment_id,
+                razorpaySignature: response.razorpay_signature,
+              }
+            );
 
-            setSuccess("Payment completed successfully.");
+            if (verificationResponse.data.bill?.paymentStatus === "paid") {
+              setSuccess("Payment completed successfully.");
+            } else {
+              const remaining = Number(
+                verificationResponse.data.remainingAmount || 0
+              ).toLocaleString("en-IN");
+              setSuccess(
+                `Payment received. Remaining balance: ₹${remaining}.`
+              );
+            }
+
             await fetchBills();
           } catch (verificationError) {
             setError(
@@ -132,6 +151,9 @@ const CustomerBills = () => {
         <div className="space-y-4">
           {bills.map((bill) => {
             const isPaid = bill.paymentStatus === "paid";
+            const amountPaid = Number(bill.amountPaid || 0);
+            const totalAmount = Number(bill.customerTotal || 0);
+            const remainingAmount = Math.max(0, totalAmount - amountPaid);
             const isPaying = payingBillId === bill._id;
 
             return (
@@ -165,12 +187,28 @@ const CustomerBills = () => {
                   </p>
 
                   <p>
-                    <strong>Amount Payable:</strong>{" "}
+                    <strong>Total Payable:</strong>{" "}
                     <span className="text-lg font-semibold text-green-700">
-                      ₹
-                      {Number(bill.customerTotal || 0).toLocaleString("en-IN")}
+                      ₹{totalAmount.toLocaleString("en-IN")}
                     </span>
                   </p>
+
+                  {!isPaid && amountPaid > 0 && (
+                    <>
+                      <p>
+                        <strong>Paid So Far:</strong>{" "}
+                        <span className="font-semibold text-green-700">
+                          ₹{amountPaid.toLocaleString("en-IN")}
+                        </span>
+                      </p>
+                      <p>
+                        <strong>Remaining:</strong>{" "}
+                        <span className="font-semibold text-orange-600">
+                          ₹{remainingAmount.toLocaleString("en-IN")}
+                        </span>
+                      </p>
+                    </>
+                  )}
 
                   <p className="text-sm text-gray-500">
                     <strong>Generated On:</strong>{" "}
@@ -194,7 +232,11 @@ const CustomerBills = () => {
                     disabled={isPaying}
                     className="mt-5 w-full rounded-lg bg-blue-600 px-4 py-3 font-semibold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
                   >
-                    {isPaying ? "Opening Payment..." : "Pay Now"}
+                    {isPaying
+                      ? "Opening Payment..."
+                      : amountPaid > 0
+                      ? "Pay Remaining"
+                      : "Pay Now"}
                   </button>
                 )}
               </div>
