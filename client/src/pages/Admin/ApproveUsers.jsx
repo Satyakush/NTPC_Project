@@ -3,6 +3,7 @@ import axios from "../../utils/api";
 
 const ApproveUsers = () => {
   const [users, setUsers] = useState([]);
+  const [processingId, setProcessingId] = useState(null);
 
   const fetchPending = async () => {
     try {
@@ -14,22 +15,34 @@ const ApproveUsers = () => {
   };
 
   const approve = async (id) => {
+    if (processingId) return;
+
+    setProcessingId(id);
+
     try {
       await axios.put(`/auth/approve/${id}`);
-      fetchPending();
+      await fetchPending();
     } catch (err) {
-      alert("❌ Failed to approve user.");
+      alert(err.response?.data?.message || "❌ Failed to approve user.");
+    } finally {
+      setProcessingId(null);
     }
   };
 
   const reject = async (id) => {
-    if (window.confirm("Are you sure you want to reject this user?")) {
-      try {
-        await axios.delete(`/auth/reject/${id}`);
-        fetchPending();
-      } catch (err) {
-        alert("❌ Failed to reject user.");
-      }
+    if (processingId) return;
+
+    if (!window.confirm("Are you sure you want to reject this user?")) return;
+
+    setProcessingId(id);
+
+    try {
+      await axios.delete(`/auth/reject/${id}`);
+      await fetchPending();
+    } catch (err) {
+      alert(err.response?.data?.message || "❌ Failed to reject user.");
+    } finally {
+      setProcessingId(null);
     }
   };
 
@@ -86,15 +99,17 @@ const ApproveUsers = () => {
           <div className="mt-4 flex gap-4">
             <button
               onClick={() => approve(u._id)}
-              className="bg-green-600 hover:bg-green-700 text-white px-4 py-1 rounded"
+              disabled={processingId !== null}
+              className="bg-green-600 hover:bg-green-700 text-white px-4 py-1 rounded disabled:cursor-not-allowed disabled:opacity-60"
             >
-              Approve
+              {processingId === u._id ? "Approving..." : "Approve"}
             </button>
             <button
               onClick={() => reject(u._id)}
-              className="bg-red-600 hover:bg-red-700 text-white px-4 py-1 rounded"
+              disabled={processingId !== null}
+              className="bg-red-600 hover:bg-red-700 text-white px-4 py-1 rounded disabled:cursor-not-allowed disabled:opacity-60"
             >
-              Reject
+              {processingId === u._id ? "Processing..." : "Reject"}
             </button>
           </div>
         </div>
