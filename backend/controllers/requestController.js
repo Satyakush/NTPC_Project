@@ -11,16 +11,50 @@ exports.createRequest = async (req, res) => {
   try {
     const { items, remarks, isDraft } = req.body;
     const customerId = req.user.id;
+    const idempotencyKey = req.headers["idempotency-key"]?.trim();
+
+    if (!idempotencyKey) {
+      return res.status(400).json({
+        message: "Missing request submission key. Please try again.",
+      });
+    }
+
+    const existingRequest = await Request.findOne({
+      idempotencyKey,
+      customer: customerId,
+    });
+
+    if (existingRequest) {
+      return res.status(200).json(existingRequest);
+    }
 
     const requestId = await generateRequestId();
 
-    const newRequest = await Request.create({
-      requestId,
-      customer: customerId,
-      items,
-      remarks,
-      status: isDraft ? "draft" : "pending",
-    });
+    let newRequest;
+
+    try {
+      newRequest = await Request.create({
+        requestId,
+        idempotencyKey,
+        customer: customerId,
+        items,
+        remarks,
+        status: isDraft ? "draft" : "pending",
+      });
+    } catch (err) {
+      if (err.code === 11000 && err.keyPattern?.idempotencyKey) {
+        const duplicateRequest = await Request.findOne({
+          idempotencyKey,
+          customer: customerId,
+        });
+
+        if (duplicateRequest) {
+          return res.status(200).json(duplicateRequest);
+        }
+      }
+
+      throw err;
+    }
 
     if (!isDraft) {
       await transporter.sendMail({
@@ -335,7 +369,9 @@ exports.finalizeRequest = async (req, res) => {
       bills,
     });
   } catch (err) {
-    await session.abortTransaction();
+    try {
+      await session.abortTransaction();
+    } catch {}
     session.endSession();
 
     console.error("❌ Error finalizing request:", err);
