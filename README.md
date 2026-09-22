@@ -1,36 +1,103 @@
-# NTPC Project
+# 🏢 ProcureHub — NTPC Internship Project
 
-This is the main repository for the NTPC project, built by Satyakush. It contains the complete full-stack application, including the backend server and the frontend client.
+**ProcureHub** is an internal cooperative procurement workflow application developed during my internship at **NTPC Vindhyachal**.
 
----
+It focuses on digitizing procurement requests, approvals and billing workflows while improving visibility into the request lifecycle.
 
-## 🚀 Getting Started
+> This public repository is portfolio-safe documentation/code. Internal NTPC data and credentials are not included.
 
-Instructions on how to set up and run this project locally.
+## 🎯 Problem
 
-### Prerequisites
+Procurement workflows involve multiple stages, approvals and records. Manual coordination can make request status, billing and follow-up harder to track.
 
-- Node.js (v18 or later)
+ProcureHub provides a centralized workflow for managing those stages.
+
+## 🔄 Workflow
+
+```text
+Purchase Request
+       ↓
+Approval Workflow
+       ↓
+Request Processing
+       ↓
+Billing
+       ↓
+Finalization
+```
+
+## 🧑‍💻 My Contribution
+
+- Full-stack application development.
+- Procurement request and approval workflows.
+- Billing-related backend functionality.
+- Data processing and reporting workflows.
+- Risk-analysis reporting and automation.
+- Power BI dashboard development.
+- Improving reporting efficiency through automation.
+
+## 📊 Analytics & Reporting
+
+- Automated repetitive risk-analysis reporting workflows.
+- Power BI dashboards for operational visibility.
+- Structured enterprise data processing.
+
+## 🏗️ Application Structure
+
+```text
+ProcureHub/
+├── backend/   REST API + business logic
+├── client/    React frontend
+└── README.md
+```
+
+High-level request flow:
+
+```text
+React Client → REST API → Business Logic → Database
+```
+
+## 🧰 Tech Stack
+
+- React
+- Node.js
+- Express.js
 - MongoDB
+- REST APIs
+- Authentication / authorization
+- Power BI
 
-### Installation & Setup
+## ⚙️ Local Development
 
-1.  **Clone the repository:**
-    ```sh
-    git clone [https://github.com/Satyakush/NTPC_Project.git](https://github.com/Satyakush/NTPC_Project.git)
-    ```
+### Backend
+```bash
+cd backend
+npm install
+npm start
+```
 
-2.  **Backend Setup:**
-    ```sh
-    cd backend
-    npm install
-    # Create a .env file and add your database and mailer credentials
-    npm start
-    ```
+### Frontend
+```bash
+cd client
+npm install
+npm run dev
+```
 
-3.  **Frontend Setup:**
-    ```sh
-    cd client
-    npm install
-    npm run dev
-    ```
+Create the backend `.env` using the variables expected by the application.
+
+## 🔐 Security
+
+Secrets and environment-specific configuration should be stored in `.env` files and never committed to Git. Internal enterprise data should not be placed in this public repository.
+
+## 📌 Project Context
+
+**Organization:** NTPC Vindhyachal  
+**Project:** ProcureHub  
+**Role:** SDE Intern  
+**Domain:** Procurement workflow + analytics
+
+This project demonstrates experience working with real business requirements, workflow state, reporting automation and enterprise data.
+
+## 👨‍💻 Author
+
+**Satyam Kushwaha** · [GitHub](https://github.com/Satyakush) · [Portfolio](https://satyakush.github.io/Portfolio/)
