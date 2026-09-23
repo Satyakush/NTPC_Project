@@ -1,103 +1,158 @@
-# 🏢 ProcureHub — NTPC Internship Project
+<div align="center">
 
-**ProcureHub** is an internal cooperative procurement workflow application developed during my internship at **NTPC Vindhyachal**.
+# 🏢 ProcureHub
 
-It focuses on digitizing procurement requests, approvals and billing workflows while improving visibility into the request lifecycle.
+### Enterprise Procurement Workflow Platform · NTPC Vindhyachal Internship
 
-> This public repository is portfolio-safe documentation/code. Internal NTPC data and credentials are not included.
+A full-stack procurement workflow application built during my **SDE Internship at NTPC Vindhyachal**, focused on digitizing purchase requests, approvals, billing and operational reporting.
 
-## 🎯 Problem
+<p>
+<a href="https://ntpc-frontend-kappa.vercel.app/"><img src="https://img.shields.io/badge/Live%20Demo-2563eb?style=for-the-badge&logo=vercel&logoColor=white" alt="Live Demo"></a>
+<a href="https://github.com/Satyakush/NTPC_Project"><img src="https://img.shields.io/badge/Source%20Code-111827?style=for-the-badge&logo=github&logoColor=white" alt="Source Code"></a>
+<img src="https://img.shields.io/badge/MERN-Stack-2563eb?style=for-the-badge" alt="MERN Stack">
+<img src="https://img.shields.io/badge/NTPC-Internship-f59e0b?style=for-the-badge" alt="NTPC Internship">
+</p>
 
-Procurement workflows involve multiple stages, approvals and records. Manual coordination can make request status, billing and follow-up harder to track.
+</div>
 
-ProcureHub provides a centralized workflow for managing those stages.
+---
 
-## 🔄 Workflow
+## 🌐 Live Platform
 
-```text
-Purchase Request
-       ↓
-Approval Workflow
-       ↓
-Request Processing
-       ↓
-Billing
-       ↓
-Finalization
-```
+**[Launch ProcureHub →](https://ntpc-frontend-kappa.vercel.app/)**
+
+**Purchase Request → Approval → Processing → Billing → Finalization**
+
+> This public repository contains portfolio-safe documentation/code. Internal NTPC data, credentials and confidential information are not included.
+
+---
+
+## 🎯 The Problem
+
+Procurement operations involve multiple stakeholders, approvals, records and follow-up steps.
+
+ProcureHub provides a centralized workflow for:
+
+- Purchase request management
+- Approval tracking
+- Request processing
+- Billing workflow
+- Finalization
+- Operational reporting
+
+---
 
 ## 🧑‍💻 My Contribution
 
-- Full-stack application development.
-- Procurement request and approval workflows.
-- Billing-related backend functionality.
-- Data processing and reporting workflows.
-- Risk-analysis reporting and automation.
-- Power BI dashboard development.
-- Improving reporting efficiency through automation.
+During the internship, I worked across both the application and reporting side of the project.
+
+- Full-stack application development
+- Procurement request workflows
+- Approval and state-management flows
+- Billing-related backend functionality
+- Reporting workflow automation
+- Risk-analysis reporting
+- Power BI dashboard development
+- Enterprise data processing
+- Improving reporting efficiency through automation
+
+---
 
 ## 📊 Analytics & Reporting
 
-- Automated repetitive risk-analysis reporting workflows.
-- Power BI dashboards for operational visibility.
-- Structured enterprise data processing.
+Alongside ProcureHub development, I worked on operational reporting using **Excel and Power BI**.
 
-## 🏗️ Application Structure
+### Highlights
 
-```text
-ProcureHub/
-├── backend/   REST API + business logic
-├── client/    React frontend
-└── README.md
-```
+- Automated repetitive risk-analysis reporting workflows
+- Built Power BI dashboards for operational visibility
+- Structured enterprise data for reporting
+- Improved reporting efficiency by approximately **30%**
 
-High-level request flow:
+---
 
-```text
-React Client → REST API → Business Logic → Database
-```
+## 🏗️ Architecture
+
+~~~
+React Client
+     │ REST API
+     ▼
+Node.js + Express
+     │
+     ├── Authentication
+     ├── Business Logic
+     ├── Workflow State
+     └── Data Access
+             │
+             ▼
+          MongoDB
+~~~
+
+---
 
 ## 🧰 Tech Stack
 
-- React
-- Node.js
-- Express.js
-- MongoDB
-- REST APIs
-- Authentication / authorization
-- Power BI
+| Layer | Technologies |
+|---|---|
+| Frontend | React, Tailwind CSS |
+| Backend | Node.js, Express.js |
+| Database | MongoDB |
+| APIs | REST |
+| Authentication | Authentication / Authorization |
+| Analytics | Excel, Power BI |
+| Deployment | Vercel |
+
+---
+
+## 🔐 Project Boundaries
+
+- Environment-specific configuration belongs in .env files.
+- Secrets must never be committed to Git.
+- Internal enterprise data is excluded from this public repository.
+- Production permissions should be enforced by the backend.
+
+---
 
 ## ⚙️ Local Development
 
 ### Backend
-```bash
+~~~bash
 cd backend
 npm install
 npm start
-```
+~~~
 
 ### Frontend
-```bash
+~~~bash
 cd client
 npm install
 npm run dev
-```
+~~~
 
-Create the backend `.env` using the variables expected by the application.
+Create the backend .env using the variables expected by the application.
 
-## 🔐 Security
+---
 
-Secrets and environment-specific configuration should be stored in `.env` files and never committed to Git. Internal enterprise data should not be placed in this public repository.
+## 📌 Internship Context
 
-## 📌 Project Context
+| Detail | Information |
+|---|---|
+| Organization | NTPC Vindhyachal |
+| Project | ProcureHub |
+| Role | SDE Intern |
+| Domain | Procurement Workflow + Analytics |
+| Primary Areas | Full Stack Development, Automation, Power BI |
 
-**Organization:** NTPC Vindhyachal  
-**Project:** ProcureHub  
-**Role:** SDE Intern  
-**Domain:** Procurement workflow + analytics
-
-This project demonstrates experience working with real business requirements, workflow state, reporting automation and enterprise data.
+---
 
 ## 👨‍💻 Author
 
-**Satyam Kushwaha** · [GitHub](https://github.com/Satyakush) · [Portfolio](https://satyakush.github.io/Portfolio/)
+**Satyam Kushwaha**
+
+[GitHub](https://github.com/Satyakush) · [Portfolio](https://satyakush.github.io/Portfolio/) · [LinkedIn](https://www.linkedin.com/in/satyam-kushwaha-06b7a5244)
+
+<div align="center">
+
+**Engineering software around real workflows, not just screens.**
+
+</div>
