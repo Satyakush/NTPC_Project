@@ -7,12 +7,13 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  const login = async (email, password) => {
+  const login = async (email, password, remember = false) => {
     try {
       const res = await axios.post("/auth/login", { email, password });
       const data = res.data;
-      localStorage.setItem("token", data.token);
-      localStorage.setItem("user", JSON.stringify(data.user)); // ✅ Save user
+      const storage = remember ? localStorage : sessionStorage;
+      storage.setItem("token", data.token);
+      storage.setItem("user", JSON.stringify(data.user));
       setUser(data.user);
       return data.user;
     } catch (err) {
@@ -23,13 +24,15 @@ export const AuthProvider = ({ children }) => {
 
   const logout = () => {
     localStorage.removeItem("token");
-    localStorage.removeItem("user"); // ✅ Clear user
+    localStorage.removeItem("user");
+    sessionStorage.removeItem("token");
+    sessionStorage.removeItem("user");
     setUser(null);
   };
 
   useEffect(() => {
-    const token = localStorage.getItem("token");
-    const storedUser = localStorage.getItem("user");
+    const token = localStorage.getItem("token") || sessionStorage.getItem("token");
+    const storedUser = localStorage.getItem("user") || sessionStorage.getItem("user");
 
     if (token && storedUser) {
       setUser(JSON.parse(storedUser)); // ✅ Restore user
