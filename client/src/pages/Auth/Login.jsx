@@ -12,6 +12,7 @@ const Login = () => {
   const [remember, setRemember] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -66,7 +67,7 @@ const Login = () => {
             <label className="procure-login__field">
               <span>Password</span>
               <div className="procure-login__control">
-                <input type="password" required value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} placeholder="••••••••" autoComplete="current-password" />
+                <div className="procure-login__password-wrap"><input type={showPassword ? "text" : "password"} required value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} placeholder="••••••••" autoComplete="current-password" /><button type="button" className="procure-login__toggle" onClick={() => setShowPassword((value) => !value)}>{showPassword ? "Hide" : "Show"}</button></div>
               </div>
             </label>
 
