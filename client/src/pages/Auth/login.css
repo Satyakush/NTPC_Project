@@ -100,3 +100,4 @@
 @media(max-height:760px) and (min-width:901px){.procure-register__card{padding:1.05rem 1.25rem!important}.procure-register__card form{margin-top:.8rem!important;gap:.5rem!important}}
 
 .procure-login__toggle{width:2rem;height:2rem;display:grid;place-items:center;right:.35rem;padding:.35rem;border-radius:.5rem}.procure-login__toggle svg{width:1.05rem;height:1.05rem;display:block}.procure-login__toggle:hover{background:rgba(103,232,249,.08)}
+.procure-register__password-wrap{position:relative}.procure-register__password-wrap input{padding-right:3.5rem}.procure-register__password-toggle{position:absolute;right:.35rem;bottom:.35rem;width:2rem;height:2rem;display:grid;place-items:center;border:0;border-radius:.5rem;background:transparent;color:#67e8f9;cursor:pointer}.procure-register__password-toggle svg{width:1.05rem;height:1.05rem;display:block}.procure-register__password-toggle:hover{background:rgba(103,232,249,.08)}
