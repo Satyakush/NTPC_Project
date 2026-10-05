@@ -71,3 +71,7 @@
 }
 
 .procure-login__password-wrap{position:relative}.procure-login__password-wrap input{padding-right:4.5rem}.procure-login__toggle{position:absolute;right:.55rem;top:50%;transform:translateY(-50%);border:0;background:transparent;color:#67e8f9;font-size:.72rem;font-weight:900;cursor:pointer;padding:.45rem}.procure-login__toggle:focus-visible{outline:2px solid #67e8f9;outline-offset:2px}
+
+
+.procure-login__card{align-self:center;height:max-content;min-height:0;max-height:calc(100dvh - 2.5rem);overflow-y:auto;overscroll-behavior:contain}
+@media(max-width:900px){.procure-login__card{max-height:none;overflow:visible}}
