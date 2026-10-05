@@ -101,3 +101,95 @@
 
 .procure-login__toggle{width:2rem;height:2rem;display:grid;place-items:center;right:.35rem;padding:.35rem;border-radius:.5rem}.procure-login__toggle svg{width:1.05rem;height:1.05rem;display:block}.procure-login__toggle:hover{background:rgba(103,232,249,.08)}
 .procure-register__password-wrap{position:relative}.procure-register__password-wrap input{padding-right:3.5rem}.procure-register__password-toggle{position:absolute;right:.35rem;bottom:.35rem;width:2rem;height:2rem;display:grid;place-items:center;border:0;border-radius:.5rem;background:transparent;color:#67e8f9;cursor:pointer}.procure-register__password-toggle svg{width:1.05rem;height:1.05rem;display:block}.procure-register__password-toggle:hover{background:rgba(103,232,249,.08)}
+
+/* Final mobile auth correction: override the desktop min-width column added above. */
+@media (max-width: 900px) {
+  .procure-login {
+    height: auto;
+    min-height: 100dvh;
+    overflow: visible;
+  }
+
+  .procure-login__layout {
+    width: 100%;
+    max-width: 560px;
+    min-height: calc(100dvh - 72px);
+    height: auto;
+    grid-template-columns: minmax(0, 1fr) !important;
+    gap: 0;
+    align-items: center;
+    padding: 1.25rem 1rem 2rem;
+    margin: 0 auto;
+  }
+
+  .procure-login__intro {
+    display: none;
+  }
+
+  .procure-login__card {
+    width: 100%;
+    max-width: 460px;
+    margin: 0 auto;
+    padding: 1.35rem 1.2rem;
+    border-radius: 1.25rem;
+  }
+
+  .procure-login__mobile-brand {
+    display: block;
+    margin-bottom: 1.25rem;
+  }
+
+  .procure-login__mobile-brand h1 {
+    max-width: none;
+    white-space: normal;
+    word-break: normal;
+    overflow-wrap: break-word;
+  }
+
+  .procure-login__card h2,
+  .procure-login__subtitle,
+  .procure-login__footer {
+    max-width: 100%;
+    white-space: normal;
+    word-break: normal;
+    overflow-wrap: break-word;
+  }
+
+  .procure-login__form,
+  .procure-login__field,
+  .procure-login__control,
+  .procure-login__password-wrap {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .procure-login__control input,
+  .procure-login__password-wrap input {
+    width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+  }
+}
+
+@media (max-width: 480px) {
+  .procure-login__layout {
+    padding: 1rem .75rem 1.5rem;
+  }
+
+  .procure-login__card {
+    padding: 1.15rem 1rem;
+  }
+
+  .procure-login__mobile-brand h1 {
+    font-size: 1.7rem;
+    line-height: 1.1;
+  }
+
+  .procure-login__card h2 {
+    font-size: 1.65rem;
+  }
+
+  .procure-login__form {
+    gap: .8rem;
+  }
+}
